@@ -8,8 +8,7 @@ function pageHead(string $title, bool $isAdmin = false): void {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{$title} – A Pit Lane of Ferrari</title>
-<!-- Forma DJR via Adobe Fonts — replace XXXXXXX with your Adobe Fonts kit ID from use.typekit.net -->
-<link rel="stylesheet" href="https://use.typekit.net/XXXXXXX.css">
+<link rel="stylesheet" href="https://use.typekit.net/uef7mgf.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="{$base}/assets/css/main.css">
