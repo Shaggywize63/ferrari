@@ -2,13 +2,16 @@
     "name": "ferrari/pitlane-competition",
     "description": "A Pit Lane of Ferrari – HP Competition Management System",
     "require": {
-        "endroid/qr-code": "^6.1",
-        "endroid/qr-code-bundle": "*"
+        "php": ">=8.0",
+        "endroid/qr-code": "^6.1"
+    },
+    "config": {
+        "platform": {},
+        "optimize-autoloader": true
     },
     "autoload": {
         "psr-4": {
             "App\\": "src/"
         }
-    },
-    "require-php": ">=8.0"
+    }
 }
