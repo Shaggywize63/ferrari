@@ -1,0 +1,5 @@
+vendor/
+qrcodes/*.png
+.env
+*.env
+*.log
