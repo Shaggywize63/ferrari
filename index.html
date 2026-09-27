@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferrari Performance Lab × HP — Station Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Narrow:wght@600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#D40000; --red-deep:#A50000; --red-glow:#ff1e1e;
+  --hp:#0096D6; --hp-deep:#00567d;
+  --ink:#0a0a0c; --panel:#141418; --panel-2:#1c1c22; --line:#2c2c34;
+  --paper:#f4f4f6; --paper-2:#e7e7ec;
+  --txt:#f5f5f7; --txt-dim:#9a9aa6; --txt-mute:#63636e;
+  --gold:#FFD200;
+  --ok:#22c55e;
+  --track:#26262c;
+  --r:14px;
+  --mono:'JetBrains Mono',monospace;
+  --disp:'Archivo Narrow',sans-serif;
+  --num:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Archivo',sans-serif;
+  background:#08080a;
+  color:var(--txt);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+
+/* ============ APP SHELL ============ */
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* Station bar — simulates each laptop / kiosk */
+.stationbar{
+  display:flex;align-items:center;gap:2px;
+  background:#000;border-bottom:1px solid #1a1a1f;
+  padding:0 14px;height:52px;flex-shrink:0;
+  overflow-x:auto;
+}
+.sb-brand{display:flex;align-items:center;gap:10px;padding-right:16px;margin-right:8px;border-right:1px solid #222;flex-shrink:0}
+.hp-badge{width:30px;height:30px;border-radius:50%;background:var(--hp);display:flex;align-items:center;justify-content:center;font-weight:800;font-style:italic;font-size:12px;color:#fff;letter-spacing:-1px}
+.fe-badge{width:24px;height:30px;background:var(--gold);border-radius:3px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:15px;font-style:italic;box-shadow:0 0 0 1px #000 inset}
+.sb-brand .t{font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#666}
+.sb-tab{
+  display:flex;flex-direction:column;gap:2px;
+  padding:7px 14px;border-radius:8px 8px 0 0;flex-shrink:0;
+  border:1px solid transparent;border-bottom:none;
+  min-width:112px;transition:background .15s;
+}
+.sb-tab:hover{background:#111}
+.sb-tab.on{background:var(--panel);border-color:#2a2a30}
+.sb-tab .k{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--txt-mute)}
+.sb-tab.on .k{color:var(--red-glow)}
+.sb-tab .n{font-size:12px;font-weight:600;color:#888}
+.sb-tab.on .n{color:#fff}
+.sb-tab .lock{font-size:9px;color:var(--txt-mute)}
+.sb-spacer{flex:1}
+.sb-hint{font-family:var(--mono);font-size:10px;color:#3f3f46;padding-right:6px;flex-shrink:0;letter-spacing:.04em}
+
+/* Screen area */
+.screen{flex:1;position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% -10%,#16161c 0%,#08080a 60%)}
+.station{position:absolute;inset:0;overflow-y:auto;display:none}
+.station.on{display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:34px 40px 60px}
+
+/* Kiosk chrome label per screen */
+.kioskhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+.kioskhead .id-chip{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  background:#000;border:1px solid #2a2a30;border-radius:999px;
+  padding:7px 14px;color:var(--txt-dim);display:flex;align-items:center;gap:8px
+}
+.id-chip b{color:var(--gold);font-weight:700}
+.id-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.eyebrow{
+  font-family:var(--disp);font-weight:700;letter-spacing:.34em;
+  text-transform:uppercase;font-size:12px;color:var(--red);
+  display:flex;align-items:center;gap:12px
+}
+.eyebrow::before{content:"";width:34px;height:2px;background:var(--red)}
+
+.h-title{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5vw,58px);line-height:.98;letter-spacing:-.01em;margin:14px 0 6px;text-transform:uppercase}
+.h-sub{color:var(--txt-dim);font-size:16px;max-width:60ch;line-height:1.5}
+
+/* ============ CARDS / PANELS ============ */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--red);color:#fff;font-weight:700;font-size:15px;
+  padding:15px 28px;border-radius:10px;letter-spacing:.02em;
+  transition:transform .12s,box-shadow .2s,background .15s;
+  box-shadow:0 6px 22px -8px rgba(212,0,0,.7);
+}
+.btn:hover{background:var(--red-glow);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{background:#2a2a30;color:#5a5a63;box-shadow:none;cursor:not-allowed;transform:none}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);box-shadow:none}
+.btn.ghost:hover{background:#1c1c22;border-color:#3a3a44}
+.btn.hp{background:var(--hp);box-shadow:0 6px 22px -8px rgba(0,150,214,.7)}
+.btn.hp:hover{background:#00a9ef}
+.btn.big{font-size:17px;padding:18px 36px}
+.btn .chev{font-weight:900}
+
+/* ============ FORM ============ */
+.field{margin-bottom:22px}
+.field label{display:block;font-weight:600;font-size:15px;margin-bottom:10px}
+.field .q-n{font-family:var(--mono);color:var(--red-glow);font-size:12px;margin-right:8px}
+.field .hint{color:var(--txt-mute);font-size:13px;margin-top:6px}
+.input{
+  width:100%;background:#0c0c0f;border:1px solid #33333c;border-radius:10px;
+  color:#fff;font-size:16px;padding:15px 16px;transition:border .15s,box-shadow .15s;
+}
+.input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(212,0,0,.15)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{
+  padding:12px 18px;border:1px solid #33333c;border-radius:999px;
+  background:#0c0c0f;font-weight:600;font-size:14px;color:var(--txt-dim);
+  transition:all .13s;
+}
+.chip:hover{border-color:#55555f;color:#fff}
+.chip.sel{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 0 3px rgba(212,0,0,.18)}
+.chip.sel.hp{background:var(--hp);border-color:var(--hp);box-shadow:0 0 0 3px rgba(0,150,214,.18)}
+
+/* photo upload */
+.photo-upload{display:flex;align-items:center;gap:14px;border:1px dashed #3a3a44;border-radius:12px;padding:12px;background:#0c0c0f;cursor:pointer;transition:.14s}
+.photo-upload:hover{border-color:var(--red);background:#111}
+.photo-upload.filled{border-style:solid;border-color:#2a4a30}
+.pu-thumb{width:56px;height:56px;border-radius:10px;background:#141418;border:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pu-thumb svg{width:26px;height:26px;opacity:.5}
+.pu-thumb img{width:100%;height:100%;object-fit:cover}
+.pu-txt b{display:block;font-size:14px}
+.pu-txt span{font-size:12px;color:var(--txt-mute)}
+/* passport photo holds an uploaded image */
+.pp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* ============ ID UNLOCK GATE ============ */
+.gate{max-width:520px;margin:6vh auto 0;text-align:center}
+.gate .lockicon{width:64px;height:64px;border-radius:16px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:26px}
+.gate h2{font-family:var(--disp);text-transform:uppercase;font-size:30px;letter-spacing:.01em;margin-bottom:8px}
+.gate p{color:var(--txt-dim);margin-bottom:26px}
+.idinput{
+  width:100%;text-align:center;font-family:var(--mono);font-size:22px;letter-spacing:.14em;
+  text-transform:uppercase;background:#0c0c0f;border:1px solid #33333c;border-radius:12px;
+  padding:20px;color:var(--gold);
+}
+.idinput:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,210,0,.14)}
+.gate .err{color:var(--red-glow);font-size:13px;margin-top:12px;min-height:18px;font-weight:600}
+.gate .recent{margin-top:26px;font-size:12px;color:var(--txt-mute)}
+.gate .recent b{color:var(--txt-dim);cursor:pointer;font-family:var(--mono);border-bottom:1px dashed #444}
+
+/* ============ STEP 1 : profile card ============ */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+
+.passport{
+  position:relative;background:linear-gradient(160deg,#101014,#000);
+  border:1px solid #2a2a30;border-radius:18px;padding:26px;overflow:hidden;
+  box-shadow:0 30px 60px -30px #000;
+}
+.passport::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(120% 60% at 120% 0%,rgba(212,0,0,.25),transparent 55%),
+  radial-gradient(80% 60% at -10% 100%,rgba(212,0,0,.18),transparent 60%);pointer-events:none}
+.pp-lanyard{position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:60px;background:linear-gradient(var(--red),var(--red-deep));border-radius:0 0 6px 6px}
+.pp-lanyard::after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:18px;height:12px;background:#2b2b31;border-radius:3px;border:1px solid #444}
+.pp-head{display:flex;align-items:center;justify-content:space-between;position:relative;margin-top:14px;padding-bottom:14px;border-bottom:1px solid #2a2a30}
+.pp-logos{display:flex;align-items:center;gap:8px}
+.pp-title{font-family:var(--disp);font-style:italic;font-weight:700;color:var(--red-glow);line-height:.9;text-transform:uppercase}
+.pp-title small{display:block;font-style:normal;font-size:8px;letter-spacing:.25em;color:#888}
+.pp-strip{font-family:var(--mono);font-size:9px;letter-spacing:.28em;color:#777;text-align:center;margin:12px 0;text-transform:uppercase}
+.pp-photo{width:130px;height:130px;border-radius:50%;margin:6px auto;border:2px solid var(--red);display:flex;align-items:center;justify-content:center;background:#141418;position:relative;overflow:hidden}
+.pp-photo svg{width:70px;height:70px;opacity:.5}
+.pp-name{text-align:center;font-family:var(--disp);text-transform:uppercase;font-size:30px;font-weight:700;letter-spacing:.02em;margin-top:8px}
+.pp-role{text-align:center;color:var(--red-glow);font-style:italic;font-weight:600;margin-bottom:16px}
+.pp-foot{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid #2a2a30;padding-top:14px;position:relative}
+.pp-foot .lab{font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:#777;text-transform:uppercase;margin-bottom:4px}
+.pp-num{font-family:var(--num);font-size:30px;font-weight:700;color:var(--red-glow);line-height:1}
+.pp-jid{font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.05em}
+
+.summary-line{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.summary-line:last-child{border-bottom:none}
+.summary-line .l{color:var(--txt-dim)}
+.summary-line .v{font-weight:700}
+
+/* ID handoff callout */
+.handoff{
+  margin-top:20px;background:linear-gradient(120deg,rgba(255,210,0,.08),rgba(212,0,0,.06));
+  border:1px solid #3a3320;border-radius:12px;padding:20px;display:flex;gap:16px;align-items:center;
+}
+.handoff .big-id{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--gold);letter-spacing:.08em}
+
+/* ============ STEP 2 : concept generator ============ */
+.genframe{
+  background:linear-gradient(150deg,#12060a,#000);border:1px solid #331319;border-radius:16px;
+  padding:26px;position:relative;overflow:hidden
+}
+.genframe::after{content:"";position:absolute;inset:0;background:radial-gradient(90% 70% at 80% 20%,rgba(212,0,0,.28),transparent 60%);pointer-events:none}
+.gen-top{display:flex;justify-content:space-between;align-items:center;position:relative;margin-bottom:8px}
+.gen-top .lbl{font-family:var(--disp);font-style:italic;font-weight:700;letter-spacing:.14em;color:#fff;opacity:.8;text-transform:uppercase;font-size:18px}
+.gen-timer{font-family:var(--num);font-size:40px;font-weight:700;color:#fff;opacity:.85}
+.brief-doc{background:#0c0c0f;border:1px solid var(--line);border-radius:12px;padding:22px;position:relative}
+.brief-doc h4{font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--red-glow);margin-bottom:14px}
+.brief-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed #26262c;font-size:14px}
+.brief-row:last-child{border-bottom:none}
+.brief-row .k{color:var(--txt-dim)}
+.brief-row .v{font-weight:700;text-align:right}
+
+/* copilot separate window */
+.copilot-launch{border:1px dashed #33445a;background:rgba(0,150,214,.06);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:center;margin-top:18px}
+.copilot-launch .ci{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#0096D6,#7b2ff7);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.copilot-launch .txt{flex:1}
+.copilot-launch .txt b{display:block;margin-bottom:2px}
+.copilot-launch .txt span{font-size:13px;color:var(--txt-dim)}
+
+/* Modal window = separate Copilot window */
+.winmodal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);z-index:50;display:none;align-items:center;justify-content:center;padding:30px}
+.winmodal.on{display:flex}
+.win{width:min(880px,96vw);max-height:90vh;background:#faf9fb;color:#1a1a1e;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 40px 100px -20px #000}
+.win-bar{background:#e9e8ee;border-bottom:1px solid #d8d7de;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.win-dots{display:flex;gap:7px}
+.win-dots i{width:12px;height:12px;border-radius:50%;display:block}
+.win-dots .r{background:#ff5f57}.win-dots .y{background:#febc2e}.win-dots .g{background:#28c840}
+.win-title{font-size:13px;font-weight:600;color:#55555f;display:flex;align-items:center;gap:8px}
+.win-title .ci{width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#0096D6,#7b2ff7)}
+.win-close{margin-left:auto;color:#88888f;font-size:20px;line-height:1;padding:2px 8px;border-radius:6px}
+.win-close:hover{background:#dcdce2}
+.win-body{padding:24px;overflow-y:auto;flex:1}
+.cp-brief{background:#eef4fb;border:1px solid #cfe1f2;border-radius:10px;padding:14px 16px;font-size:13px;margin-bottom:18px}
+.cp-brief b{color:#0067a3}
+.cp-msg{margin-bottom:16px;display:flex;gap:12px}
+.cp-msg .av{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff}
+.cp-msg.you .av{background:#444}
+.cp-msg.ai .av{background:linear-gradient(135deg,#0096D6,#7b2ff7)}
+.cp-bubble{background:#fff;border:1px solid #e4e3ea;border-radius:12px;padding:12px 15px;font-size:14px;line-height:1.5;max-width:80%}
+.cp-msg.you .cp-bubble{background:#0096D6;color:#fff;border-color:#0096D6}
+.cp-prompts{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 18px}
+.cp-prompt{font-size:13px;padding:9px 14px;border:1px solid #d3d2da;border-radius:999px;background:#fff;color:#333;transition:.12s}
+.cp-prompt:hover{border-color:#0096D6;color:#0096D6}
+.cp-prompt:disabled{opacity:.4;cursor:default}
+.cp-render{border:1px solid #e4e3ea;border-radius:12px;overflow:hidden;margin-top:8px;background:#000}
+.cp-render .stage{aspect-ratio:16/8;position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 120%,#3a0a0f,#0a0a0c)}
+.cp-inputrow{display:flex;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid #e4e3ea}
+.cp-inputrow input{flex:1;border:1px solid #d3d2da;border-radius:10px;padding:12px 14px;font-size:14px}
+.cp-inputrow input:focus{outline:none;border-color:#0096D6}
+.cp-send{background:#0096D6;color:#fff;border-radius:10px;padding:0 18px;font-weight:700}
+
+/* Race car reveal */
+.reveal-card{position:relative;border-radius:16px;overflow:hidden;border:1px solid #2a2a30;background:linear-gradient(160deg,#1a0509,#000)}
+.reveal-card .sky{position:absolute;inset:0;background:
+  linear-gradient(0deg,rgba(0,0,0,.6),transparent 40%),
+  repeating-linear-gradient(90deg,transparent 0 38px,rgba(0,150,214,.05) 38px 40px);
+  opacity:.7}
+.reveal-inner{position:relative;padding:26px;display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:center;min-height:290px}
+@media(max-width:720px){.reveal-inner{grid-template-columns:1fr}}
+.reveal-name{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:40px;line-height:.9;color:#fff}
+.reveal-tag{color:var(--red-glow);font-weight:700;letter-spacing:.08em;font-size:12px;margin-top:6px;text-transform:uppercase}
+.reveal-num{font-family:var(--num);font-size:80px;font-weight:700;color:rgba(255,255,255,.9);line-height:.8;margin-top:10px}
+.reveal-num small{font-size:16px;color:var(--txt-dim);display:block;letter-spacing:.2em}
+.carbox{background:#0c0c0f88;border:1px solid #2a2a30;border-radius:12px;height:190px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+
+/* ============ STEP 3 : strategist ============ */
+.pitwall{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}
+@media(max-width:900px){.pitwall{grid-template-columns:1fr}}
+.streams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stream{background:#0c0c0f;border:1px solid var(--line);border-radius:10px;padding:14px}
+.stream .lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--txt-mute);text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between}
+.stream .val{font-family:var(--num);font-size:24px;font-weight:700}
+.stream .val.warn{color:var(--gold)}
+.stream .val.bad{color:var(--red-glow)}
+.stream .sub{font-size:12px;color:var(--txt-dim);margin-top:3px}
+.report-box{background:#0c0c0f;border:1px solid var(--line);border-radius:10px;padding:16px;max-height:150px;overflow:hidden;position:relative;font-size:13px;line-height:1.5;color:var(--txt-dim)}
+.report-box::after{content:"";position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(transparent,#0c0c0f)}
+
+.mission{position:sticky;top:20px}
+.mstep{display:flex;gap:14px;padding:16px;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:var(--panel);opacity:.5;transition:.25s}
+.mstep.active{opacity:1;border-color:var(--red);box-shadow:0 0 0 3px rgba(212,0,0,.12)}
+.mstep.done{opacity:1;border-color:#234a2e}
+.mstep .no{width:30px;height:30px;border-radius:8px;background:#000;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0}
+.mstep.active .no{background:var(--red);border-color:var(--red)}
+.mstep.done .no{background:var(--ok);border-color:var(--ok);color:#000}
+.mstep .mt{font-weight:700;font-size:14px}
+.mstep .md{font-size:12px;color:var(--txt-dim);margin-top:2px}
+.ai-companion{background:linear-gradient(120deg,rgba(0,150,214,.08),rgba(123,47,247,.05));border:1px solid #24384a;border-radius:12px;padding:16px;margin-top:14px}
+.ai-companion .ah{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-weight:700;font-size:14px}
+.ai-companion .ci{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0096D6,#7b2ff7)}
+.decide-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.timer-bar{height:8px;background:#0c0c0f;border-radius:999px;overflow:hidden;margin-bottom:16px;border:1px solid var(--line)}
+.timer-fill{height:100%;background:linear-gradient(90deg,var(--ok),var(--gold),var(--red));width:100%;transition:width 1s linear}
+
+/* ============ STEP 4 : race + pit ============ */
+.simstage{background:linear-gradient(#0c0c0f,#000);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}
+.sim-hud{display:flex;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);font-family:var(--num);font-weight:700}
+.sim-hud .t{color:var(--txt-dim);font-size:12px;letter-spacing:.1em;font-family:var(--mono)}
+.sim-hud .big{font-size:30px}
+.track-view{aspect-ratio:16/7;position:relative;background:
+  linear-gradient(180deg,#12121a 0%,#1c1c26 60%,#0a0a0c 100%);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.track-lines{position:absolute;inset:0;perspective:400px;overflow:hidden}
+.tl{position:absolute;left:50%;top:50%;width:10px;height:80px;background:#fff;opacity:.6;transform-origin:center;border-radius:4px}
+.wheel-meter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:20px;align-items:flex-end}
+.gauge{text-align:center}
+.gauge .ring{width:70px;height:70px;border-radius:50%;border:5px solid #26262c;position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:700;font-size:20px}
+.gauge .lab{font-family:var(--mono);font-size:9px;color:var(--txt-mute);margin-top:6px;letter-spacing:.1em}
+
+.interrupt{position:absolute;inset:0;background:rgba(10,0,2,.92);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:5;animation:flash .5s}
+.interrupt.on{display:flex}
+@keyframes flash{0%,50%{background:rgba(120,0,0,.7)}100%{background:rgba(10,0,2,.92)}}
+.interrupt .warn-t{font-family:var(--disp);font-weight:700;font-size:44px;color:var(--red-glow);text-transform:uppercase;letter-spacing:.02em}
+.interrupt .warn-s{color:#fff;margin:10px 0 4px;font-weight:700;letter-spacing:.12em}
+
+/* keycap */
+.keycap{font-family:var(--mono);font-size:12px;font-weight:700;background:#0c0c0f;border:1px solid #3a3a44;border-bottom-width:3px;border-radius:7px;padding:8px 12px;color:#fff;letter-spacing:.04em}
+
+/* pit stop game */
+.pittask{background:#0c0c0f;border:1px solid var(--line);border-radius:12px;padding:22px;margin-top:18px}
+.pittask .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:20px}
+.pit-clock{font-family:var(--num);font-size:38px;font-weight:700;color:var(--gold);flex-shrink:0}
+.pit-crew{background:#08080a;border:1px solid var(--line);border-radius:12px;padding:22px}
+.crew-wheels{display:flex;justify-content:center;gap:26px;margin-bottom:26px}
+.wheelslot{text-align:center;opacity:.4;transition:.2s}
+.wheelslot.active{opacity:1}
+.wheelslot.done{opacity:1}
+.wheelslot .ws-ring{width:58px;height:58px;border-radius:50%;border:4px solid #2a2a30;background:repeating-conic-gradient(#141418 0 12deg,#0c0c0f 0 24deg);margin:0 auto 8px;position:relative;transition:.2s}
+.wheelslot.active .ws-ring{border-color:var(--red);box-shadow:0 0 0 4px rgba(212,0,0,.18)}
+.wheelslot.done .ws-ring{border-color:var(--ok);background:repeating-conic-gradient(#12261a 0 12deg,#0c0c0f 0 24deg)}
+.wheelslot.done .ws-ring::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ok);font-weight:900;font-size:20px}
+.wheelslot span{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--txt-dim)}
+.wheelslot.active span{color:#fff}
+.timing-wrap{max-width:640px;margin:0 auto}
+.timing-label{text-align:center;font-weight:700;font-size:15px;margin-bottom:12px}
+.timing-bar{position:relative;height:44px;background:#141418;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.timing-zone{position:absolute;top:0;bottom:0;background:linear-gradient(var(--ok),#15803d);opacity:.9;border-left:2px solid #4ade80;border-right:2px solid #4ade80}
+.timing-zone .pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:10px;color:#052e16;font-weight:700}
+.timing-marker{position:absolute;top:-3px;bottom:-3px;width:5px;background:#fff;box-shadow:0 0 12px #fff;border-radius:3px}
+.timing-hint{text-align:center;color:var(--txt-mute);font-size:13px;margin-top:12px}
+.timing-hint b{color:#fff;font-family:var(--mono)}
+.timing-wrap.hit .timing-bar{animation:goodflash .3s}
+.timing-wrap.miss .timing-bar{animation:badflash .3s}
+@keyframes goodflash{0%{box-shadow:0 0 0 4px rgba(34,197,94,.5)}100%{box-shadow:none}}
+@keyframes badflash{0%{box-shadow:0 0 0 4px rgba(212,0,0,.5)}100%{box-shadow:none}}
+.split-toast{text-align:center;font-family:var(--num);font-weight:700;font-size:18px;margin-top:14px;min-height:24px}
+
+/* ============ STEP 5 : final passport ============ */
+.finalgrid{display:grid;grid-template-columns:340px 1fr;gap:30px;align-items:start}
+@media(max-width:900px){.finalgrid{grid-template-columns:1fr}}
+.perf-passport{background:linear-gradient(160deg,#101014,#000);border:1px solid #2a2a30;border-radius:18px;padding:24px;position:relative;overflow:hidden}
+.perf-passport::before{content:"";position:absolute;inset:0;background:radial-gradient(100% 50% at 100% 0,rgba(212,0,0,.22),transparent 55%);pointer-events:none}
+.pp2-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a30;padding-bottom:14px;position:relative}
+.scores-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.sc-cell{background:#0c0c0f;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.sc-cell .lab{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--txt-mute);text-transform:uppercase}
+.sc-cell .v{font-family:var(--num);font-size:34px;font-weight:700;color:var(--red-glow);line-height:1;margin-top:6px}
+.sc-cell .v small{font-size:13px;color:var(--txt-mute)}
+.overall{display:flex;align-items:center;gap:20px;background:#0c0c0f;border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:14px}
+.overall .ring{width:96px;height:96px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative}
+.overall .ring .n{font-family:var(--num);font-size:40px;font-weight:700}
+.overall .ring .n small{font-size:12px;color:var(--txt-mute);display:block;text-align:center}
+
+.leaderboard{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.lb-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.lb-head h3{font-family:var(--disp);text-transform:uppercase;font-size:18px;letter-spacing:.04em}
+.lb-row{display:grid;grid-template-columns:44px 1fr 90px 70px;gap:10px;padding:13px 20px;border-bottom:1px solid #202027;align-items:center;font-size:14px}
+.lb-row:last-child{border-bottom:none}
+.lb-row.me{background:linear-gradient(90deg,rgba(212,0,0,.14),transparent);border-left:3px solid var(--red)}
+.lb-rank{font-family:var(--num);font-size:20px;font-weight:700;color:var(--txt-dim)}
+.lb-row.me .lb-rank{color:var(--gold)}
+.lb-name{font-weight:600}
+.lb-time{font-family:var(--mono);font-size:13px;color:var(--txt-dim);text-align:right}
+.lb-score{font-family:var(--num);font-weight:700;font-size:18px;text-align:right;color:var(--red-glow)}
+
+/* progress dots inside station */
+.flowdots{display:flex;gap:6px;align-items:center}
+.flowdots i{width:26px;height:4px;border-radius:2px;background:#2a2a30;display:block}
+.flowdots i.on{background:var(--red)}
+.flowdots i.done{background:var(--ok)}
+
+/* completion banner */
+.done-banner{background:linear-gradient(120deg,rgba(34,197,94,.12),transparent);border:1px solid #234a2e;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.done-banner .ic{width:34px;height:34px;border-radius:50%;background:var(--ok);color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;border:1px solid #2a2a30;padding:13px 22px;border-radius:10px;font-size:14px;font-weight:600;z-index:80;transition:transform .3s;box-shadow:0 20px 40px -12px #000}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast .g{color:var(--ok)}
+
+.locked-note{color:var(--txt-mute);font-size:13px;text-align:center;margin-top:18px;font-family:var(--mono)}
+.divider{height:1px;background:var(--line);margin:26px 0}
+.small-cta{font-size:13px;color:var(--txt-dim);text-align:center;margin-top:18px}
+.small-cta b{color:var(--red-glow);cursor:pointer}
+
+/* welcome / attract screen */
+.attract{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;position:relative}
+.attract .stripes{position:absolute;right:0;top:0;bottom:0;width:38%;background:repeating-linear-gradient(115deg,var(--hp) 0 70px,#fff0 70px 90px,var(--hp) 90px 150px,#fff0 150px 190px);opacity:.14;transform:skewX(-8deg);transform-origin:top}
+.attract .eyebrow{justify-content:center}
+.attract h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;font-size:clamp(46px,8vw,92px);line-height:.9;margin:18px 0}
+.attract h1 .c{color:var(--red)}
+.attract p{color:var(--txt-dim);max-width:52ch;margin-bottom:30px;font-size:17px}
+.attract .cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:30px}
+.mini-flow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600}
+.mini-flow .n{font-family:var(--mono);color:var(--red-glow);font-size:11px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- STATION SWITCHER (each = a separate laptop/kiosk) -->
+  <div class="stationbar" id="stationbar">
+    <div class="sb-brand">
+      <div class="hp-badge">hp</div>
+      <div class="fe-badge">S</div>
+      <div class="t">Ferrari&nbsp;Performance&nbsp;Lab</div>
+    </div>
+    <!-- tabs injected -->
+    <div class="sb-spacer"></div>
+    <div class="sb-hint">Each tab = a separate laptop · unlock with Unique&nbsp;ID</div>
+  </div>
+
+  <div class="screen" id="screen">
+
+    <!-- ============ STATION 0 : ATTRACT ============ -->
+    <section class="station" data-st="0">
+      <div class="attract">
+        <div class="stripes"></div>
+        <div class="eyebrow">A Pit Lane for Croma</div>
+        <h1>Every second<br><span class="c">counts.</span></h1>
+        <p>Register as a driver, build your race car, call the strategy, survive the pit stop — and earn your Ferrari Performance Passport. Five stations. One Unique&nbsp;ID that follows you across every laptop.</p>
+        <button class="btn big" onclick="go(1)">Enter the Pit Lane <span class="chev">→</span></button>
+        <div class="cards">
+          <div class="mini-flow"><span class="n">01</span> Driver Scan</div>
+          <div class="mini-flow"><span class="n">02</span> Create Race Car</div>
+          <div class="mini-flow"><span class="n">03</span> Race Strategist</div>
+          <div class="mini-flow"><span class="n">04</span> Race &amp; Pit Stop</div>
+          <div class="mini-flow"><span class="n">05</span> Performance Score</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATION 1 : DRIVER SCAN ============ -->
+    <section class="station" data-st="1">
+      <div class="wrap">
+        <div class="kioskhead">
+          <div class="eyebrow">Station 01 · Registration Laptop</div>
+          <div class="flowdots"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        </div>
+
+        <div id="s1-form">
+          <h1 class="h-title">Driver Performance Scan</h1>
+          <p class="h-sub">Your Ferrari journey starts here. Register, discover your racing identity, then take your place on the grid.</p>
+          <div class="divider"></div>
+
+          <div class="grid2">
+            <div>
+              <div class="field">
+                <label><span class="q-n">Q1</span>What should we call you, Driver?</label>
+                <input class="input" id="drv-name" placeholder="Enter your name" maxlength="18" oninput="s1validate()">
+              </div>
+              <div class="field">
+                <label><span class="q-n">Q2</span>Driver photo</label>
+                <div class="photo-upload" id="photo-drop" onclick="document.getElementById('drv-photo').click()">
+                  <div class="pu-thumb" id="pu-thumb">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3.2"/></svg>
+                  </div>
+                  <div class="pu-txt"><b>Upload driver photo</b><span>Used on your Performance Passport &amp; race-car reveal</span></div>
+                </div>
+                <input type="file" id="drv-photo" accept="image/*" style="display:none" onchange="s1photo(event)">
+              </div>
+              <div class="field">
+                <label><span class="q-n">Q3</span>What matters most to you?</label>
+                <div class="chips" data-group="matters">
+                  <button class="chip" onclick="pick(this,'matters','Speed')">Speed</button>
+                  <button class="chip" onclick="pick(this,'matters','Precision')">Precision</button>
+                  <button class="chip" onclick="pick(this,'matters','Innovation')">Innovation</button>
+                  <button class="chip" onclick="pick(this,'matters','Consistency')">Consistency</button>
+                </div>
+              </div>
+              <div class="field">
+                <label><span class="q-n">Q4</span>How do you usually solve a challenge?</label>
+                <div class="chips" data-group="solve">
+                  <button class="chip" onclick="pick(this,'solve','Data')">Data</button>
+                  <button class="chip" onclick="pick(this,'solve','Creativity')">Creativity</button>
+                  <button class="chip" onclick="pick(this,'solve','Experience')">Experience</button>
+                  <button class="chip" onclick="pick(this,'solve','Teamwork')">Teamwork</button>
+                </div>
+              </div>
+              <button class="btn big" id="s1-btn" disabled onclick="s1generate()">Create my Driver Profile <span class="chev">→</span></button>
+            </div>
+
+            <div class="card" style="background:#0c0c0f">
+              <div style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--txt-mute);text-transform:uppercase;margin-bottom:14px">Live preview</div>
+              <div class="passport" style="opacity:.5" id="s1-preview">
+                <div class="pp-lanyard"></div>
+                <div class="pp-head">
+                  <div class="pp-logos"><div class="fe-badge">S</div><div class="pp-title">Ferrari<small>Performance Lab</small></div></div>
+                  <div class="hp-badge">hp</div>
+                </div>
+                <div class="pp-strip">/// Driver Performance Passport ///</div>
+                <div class="pp-photo" id="s1-pv-photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+                <div class="pp-name" id="pv-name">DRIVER</div>
+                <div class="pp-role">"Driver"</div>
+                <div class="pp-foot">
+                  <div><div class="lab">Driver Number</div><div class="pp-num" id="pv-num">——————</div></div>
+                  <div><div class="lab">Unique Journey ID</div><div class="pp-jid" id="pv-id">Pending…</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- generated result -->
+        <div id="s1-result" style="display:none">
+          <div class="done-banner"><div class="ic">✓</div><div><b>Your Ferrari Performance Passport is ready.</b><br><span style="color:var(--txt-dim);font-size:13px">Take your Unique ID to Station 02 to build your race car.</span></div></div>
+          <div class="grid2">
+            <div class="passport" id="s1-final-pp">
+              <div class="pp-lanyard"></div>
+              <div class="pp-head">
+                <div class="pp-logos"><div class="fe-badge">S</div><div class="pp-title">Ferrari<small>Performance Lab</small></div></div>
+                <div class="hp-badge">hp</div>
+              </div>
+              <div class="pp-strip">/// Driver Performance Passport ///</div>
+              <div class="pp-photo" id="fp-photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+              <div class="pp-name" id="fp-name">DRIVER</div>
+              <div class="pp-role">"Driver"</div>
+              <div class="pp-foot">
+                <div><div class="lab">Driver Number</div><div class="pp-num" id="fp-num">000000</div></div>
+                <div><div class="lab">Unique Journey ID</div><div class="pp-jid" id="fp-id">—</div></div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--red-glow);text-transform:uppercase;margin-bottom:8px">Racing Profile</div>
+                <div class="summary-line"><span class="l">Driver Name</span><span class="v" id="sum-name">—</span></div>
+                <div class="summary-line"><span class="l">Priority</span><span class="v" id="sum-matters">—</span></div>
+                <div class="summary-line"><span class="l">Approach</span><span class="v" id="sum-solve">—</span></div>
+                <div class="summary-line"><span class="l">Driver No.</span><span class="v" id="sum-num">—</span></div>
+              </div>
+              <div class="handoff">
+                <div>
+                  <div style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--txt-mute);text-transform:uppercase;margin-bottom:6px">Unlocks Station 02 →</div>
+                  <div class="big-id" id="handoff-id">—</div>
+                  <div style="font-size:12px;color:var(--txt-mute);margin-top:8px">Note this ID from your passport to continue at the next laptop.</div>
+                </div>
+              </div>
+              <button class="btn hp big" style="margin-top:18px;width:100%" onclick="go(2)">Continue at Station 02 <span class="chev">→</span></button>
+              <div class="locked-note">In the real activation the driver physically walks to the next laptop.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATION 2 : CREATE RACE CAR ============ -->
+    <section class="station" data-st="2">
+      <div class="wrap">
+        <div class="kioskhead">
+          <div class="eyebrow">Station 02 · Design Studio Laptop</div>
+          <div class="flowdots"><i class="done"></i><i class="on"></i><i></i><i></i><i></i></div>
+        </div>
+
+        <!-- gate -->
+        <div class="gate" data-gate="2">
+          <div class="lockicon">🔒</div>
+          <h2>Enter your Unique ID</h2>
+          <p>Scan complete at Station 01. Type the Unique Journey ID from your passport to load your driver profile.</p>
+          <input class="idinput" data-idinput="2" placeholder="FP26-XXXXXX-0000" oninput="this.value=this.value.toUpperCase()">
+          <div class="err" data-err="2"></div>
+          <button class="btn big" style="margin-top:20px;width:100%" onclick="unlock(2)">Unlock Station 02 <span class="chev">→</span></button>
+          <div class="recent" data-recent="2"></div>
+        </div>
+
+        <!-- content -->
+        <div data-content="2" style="display:none">
+          <div class="kioskhead" style="margin-top:-4px">
+            <div class="id-chip"><span class="dot"></span> Driver <b data-who="2">—</b> · <span data-whoid="2">—</span></div>
+          </div>
+          <h1 class="h-title">Create Your Race Car</h1>
+          <p class="h-sub">Every race car carries a distinct identity. Answer the brief, then bring it to life with Copilot.</p>
+          <div class="divider"></div>
+
+          <!-- questionnaire -->
+          <div id="s2-quiz">
+            <div class="grid2">
+              <div class="field">
+                <label>Driving personality</label>
+                <div class="chips" data-group="s2personality">
+                  <button class="chip" onclick="pick(this,'s2personality','Bold')">Bold</button>
+                  <button class="chip" onclick="pick(this,'s2personality','Precise')">Precise</button>
+                  <button class="chip" onclick="pick(this,'s2personality','Adventurous')">Adventurous</button>
+                  <button class="chip" onclick="pick(this,'s2personality','Strategic')">Strategic</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Race environment</label>
+                <div class="chips" data-group="s2env">
+                  <button class="chip" onclick="pick(this,'s2env','City')">City</button>
+                  <button class="chip" onclick="pick(this,'s2env','Grand Prix')">Grand Prix</button>
+                  <button class="chip" onclick="pick(this,'s2env','Night Race')">Night Race</button>
+                  <button class="chip" onclick="pick(this,'s2env','Future Circuit')">Future Circuit</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Design personality</label>
+                <div class="chips" data-group="s2design">
+                  <button class="chip" onclick="pick(this,'s2design','Classic')">Classic</button>
+                  <button class="chip" onclick="pick(this,'s2design','Futuristic')">Futuristic</button>
+                  <button class="chip" onclick="pick(this,'s2design','Sporty')">Sporty</button>
+                  <button class="chip" onclick="pick(this,'s2design','Luxury')">Luxury</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Colour inspiration</label>
+                <div class="chips" data-group="s2colour">
+                  <button class="chip" onclick="pick(this,'s2colour','Rosso Corsa')">Rosso Corsa</button>
+                  <button class="chip" onclick="pick(this,'s2colour','Carbon Black')">Carbon Black</button>
+                  <button class="chip" onclick="pick(this,'s2colour','Neon Circuit')">Neon Circuit</button>
+                  <button class="chip" onclick="pick(this,'s2colour','Silver Arrow')">Silver Arrow</button>
+                </div>
+              </div>
+            </div>
+            <button class="btn big" id="s2-gen" disabled onclick="s2generateBrief()">Generate my Race Car Brief <span class="chev">→</span></button>
+          </div>
+
+          <!-- brief generated -->
+          <div id="s2-brief" style="display:none">
+            <div class="genframe">
+              <div class="gen-top"><div class="lbl">The AI Concept Generator</div><div class="gen-timer" id="s2-timer">00:02</div></div>
+              <div class="brief-doc">
+                <h4>Race Car Design Brief · Auto-generated</h4>
+                <div class="brief-row"><span class="k">Driver Name</span><span class="v" id="b-name">—</span></div>
+                <div class="brief-row"><span class="k">Race Number</span><span class="v" id="b-num">—</span></div>
+                <div class="brief-row"><span class="k">Racing Personality</span><span class="v" id="b-pers">—</span></div>
+                <div class="brief-row"><span class="k">Racing Environment</span><span class="v" id="b-env">—</span></div>
+                <div class="brief-row"><span class="k">Design Direction</span><span class="v" id="b-design">—</span></div>
+                <div class="brief-row"><span class="k">Colour Inspiration</span><span class="v" id="b-colour">—</span></div>
+                <div class="brief-row"><span class="k">Performance Personality</span><span class="v" id="b-perf">—</span></div>
+              </div>
+              <div class="copilot-launch">
+                <div class="ci">✦</div>
+                <div class="txt"><b>Power it with Microsoft Copilot</b><span>Copilot opens in a separate window to turn your brief into a race-car concept.</span></div>
+                <button class="btn hp" onclick="openCopilot()">Open Copilot ↗</button>
+              </div>
+              <div class="locked-note" style="text-align:left;margin-top:14px">"Your race-car brief is ready. Now let's bring it to life."</div>
+            </div>
+          </div>
+
+          <!-- reveal -->
+          <div id="s2-reveal" style="display:none">
+            <div class="done-banner"><div class="ic">✓</div><div><b>Concept locked — <span id="rv-status">Ready to Race</span>.</b><br><span style="color:var(--txt-dim);font-size:13px">Your personalised race car is saved to your Journey ID.</span></div></div>
+            <div class="reveal-card">
+              <div class="sky"></div>
+              <div class="reveal-inner">
+                <div>
+                  <div id="rv-driverphoto" style="width:66px;height:66px;border-radius:50%;border:2px solid var(--red);overflow:hidden;margin-bottom:12px;display:none"></div>
+                  <div class="reveal-name" id="rv-name">DRIVER</div>
+                  <div class="reveal-tag">Built for speed · Born to win</div>
+                  <div class="reveal-num" id="rv-num">000<small>Race Number</small></div>
+                </div>
+                <div class="carbox">
+                  <svg viewBox="0 0 320 130" width="90%" style="filter:drop-shadow(0 8px 20px rgba(212,0,0,.5))">
+                    <defs><linearGradient id="carg" x1="0" x2="1"><stop offset="0" stop-color="#ff2b2b"/><stop offset="1" stop-color="#8a0000"/></linearGradient></defs>
+                    <ellipse cx="160" cy="112" rx="140" ry="10" fill="#000" opacity=".5"/>
+                    <path d="M20 90 Q40 78 70 76 L110 74 Q140 55 180 55 L225 56 Q255 58 280 72 L300 78 Q312 82 310 92 L305 96 L20 96 Z" fill="url(#carg)"/>
+                    <path d="M120 74 Q140 60 172 60 L210 61 Q225 62 235 70 Z" fill="#1a1a1f"/>
+                    <rect x="150" y="86" width="30" height="16" rx="3" fill="#fff"/><text x="165" y="98" font-family="Rajdhani" font-weight="700" font-size="13" fill="#000" text-anchor="middle" id="carnum">000</text>
+                    <circle cx="80" cy="98" r="20" fill="#111" stroke="#333" stroke-width="3"/><circle cx="80" cy="98" r="8" fill="#444"/>
+                    <circle cx="250" cy="98" r="20" fill="#111" stroke="#333" stroke-width="3"/><circle cx="250" cy="98" r="8" fill="#444"/>
+                    <rect x="18" y="60" width="8" height="34" rx="2" fill="#222"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:20px">
+              <button class="btn ghost" onclick="openCopilot()">Refine in Copilot ↗</button>
+              <button class="btn hp big" style="flex:1" onclick="go(3)">Continue to Station 03 <span class="chev">→</span></button>
+            </div>
+            <div class="locked-note">Takeaway: the driver's personalised race-car visual is saved to their Journey ID (downloadable at the end).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATION 3 : STRATEGIST ============ -->
+    <section class="station" data-st="3">
+      <div class="wrap">
+        <div class="kioskhead">
+          <div class="eyebrow">Station 03 · Pit Wall Laptop</div>
+          <div class="flowdots"><i class="done"></i><i class="done"></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="gate" data-gate="3">
+          <div class="lockicon">🔒</div>
+          <h2>Enter your Unique ID</h2>
+          <p>Take your seat on the pit wall. Enter your Unique Journey ID to load your race.</p>
+          <input class="idinput" data-idinput="3" placeholder="FP26-XXXXXX-0000" oninput="this.value=this.value.toUpperCase()">
+          <div class="err" data-err="3"></div>
+          <button class="btn big" style="margin-top:20px;width:100%" onclick="unlock(3)">Unlock Station 03 <span class="chev">→</span></button>
+          <div class="recent" data-recent="3"></div>
+        </div>
+
+        <div data-content="3" style="display:none">
+          <div class="kioskhead" style="margin-top:-4px">
+            <div class="id-chip"><span class="dot"></span> Driver <b data-who="3">—</b> · <span data-whoid="3">—</span></div>
+          </div>
+          <h1 class="h-title">The Race Strategist</h1>
+          <p class="h-sub">"The race is changing every second. You're the strategist. Your team is waiting for your call."</p>
+          <div class="divider"></div>
+
+          <div id="s3-intro" style="text-align:center;padding:20px 0 40px">
+            <p style="max-width:56ch;margin:0 auto 24px;color:var(--txt-dim)">Six live data streams. Limited time. Use <b style="color:#fff">HP AI Companion</b> to summarise, analyse, decide and communicate — before the window closes.</p>
+            <button class="btn big" onclick="s3start()">Start Strategy Session <span class="chev">→</span></button>
+          </div>
+
+          <div id="s3-game" style="display:none">
+            <div class="timer-bar"><div class="timer-fill" id="s3-timerfill"></div></div>
+            <div class="pitwall">
+              <div>
+                <div class="streams">
+                  <div class="stream"><div class="lab">Weather <span>LIVE</span></div><div class="val warn">Rain ↑</div><div class="sub">Intensity rising · Sector 2</div></div>
+                  <div class="stream"><div class="lab">Tyre Wear</div><div class="val bad">83%</div><div class="sub">Softs · 4 laps over limit</div></div>
+                  <div class="stream"><div class="lab">Race Position</div><div class="val">P2</div><div class="sub">+1.4s to leader</div></div>
+                  <div class="stream"><div class="lab">Gap Behind</div><div class="val">3.9s</div><div class="sub">P3 on fresh inters</div></div>
+                </div>
+                <div style="margin-top:14px">
+                  <div class="lab" style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--txt-mute);text-transform:uppercase;margin-bottom:8px">Telemetry / Weather Report</div>
+                  <div class="report-box" id="s3-report">
+                    Radar shows a heavy band arriving in ~2 minutes across sectors 2–3. Current soft tyres are 4 laps past optimal window; degradation curve steepening (−0.3s/lap). P3 has just pitted for intermediates and is setting purple sectors. Track temp dropping 4°C. Driver reports "front end sliding on entry." Undercut threat active. Safety car probability rising to 40%…
+                  </div>
+                </div>
+              </div>
+
+              <div class="mission">
+                <div class="mstep active" id="ms-1"><div class="no">1</div><div><div class="mt">Summarise</div><div class="md">Compress the long report</div></div></div>
+                <div class="mstep" id="ms-2"><div class="no">2</div><div><div class="mt">Analyse</div><div class="md">What's happening on track?</div></div></div>
+                <div class="mstep" id="ms-3"><div class="no">3</div><div><div class="mt">Decide</div><div class="md">Pit now or stay out?</div></div></div>
+                <div class="mstep" id="ms-4"><div class="no">4</div><div><div class="mt">Communicate</div><div class="md">Draft the team call</div></div></div>
+
+                <div class="ai-companion">
+                  <div class="ah"><div class="ci"></div> HP AI Companion</div>
+                  <div id="s3-action"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="s3-done" style="display:none">
+            <div class="done-banner"><div class="ic">✓</div><div><b>Race Strategy Locked.</b><br><span style="color:var(--txt-dim);font-size:13px">Your strategist score is saved to your Journey ID.</span></div></div>
+            <div class="scores-grid" style="max-width:640px">
+              <div class="sc-cell"><div class="lab">Decision Accuracy</div><div class="v" id="s3-acc">—<small>%</small></div></div>
+              <div class="sc-cell"><div class="lab">Response Time</div><div class="v" id="s3-rt">—<small>s</small></div></div>
+              <div class="sc-cell"><div class="lab">AI Efficiency</div><div class="v" id="s3-eff">—<small>%</small></div></div>
+              <div class="sc-cell"><div class="lab">Strategist Score</div><div class="v" id="s3-score">—<small>/100</small></div></div>
+            </div>
+            <button class="btn hp big" style="margin-top:22px" onclick="go(4)">Continue to Station 04 <span class="chev">→</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATION 4 : RACE + PIT STOP ============ -->
+    <section class="station" data-st="4">
+      <div class="wrap">
+        <div class="kioskhead">
+          <div class="eyebrow">Station 04 · Race &amp; Pit Stop Laptop</div>
+          <div class="flowdots"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i><i></i></div>
+        </div>
+
+        <div class="gate" data-gate="4">
+          <div class="lockicon">🔒</div>
+          <h2>Enter your Unique ID</h2>
+          <p>Scan your passport to the sim. Enter your Unique Journey ID to hit the track.</p>
+          <input class="idinput" data-idinput="4" placeholder="FP26-XXXXXX-0000" oninput="this.value=this.value.toUpperCase()">
+          <div class="err" data-err="4"></div>
+          <button class="btn big" style="margin-top:20px;width:100%" onclick="unlock(4)">Unlock Station 04 <span class="chev">→</span></button>
+          <div class="recent" data-recent="4"></div>
+        </div>
+
+        <div data-content="4" style="display:none">
+          <div class="kioskhead" style="margin-top:-4px">
+            <div class="id-chip"><span class="dot"></span> Driver <b data-who="4">—</b> · <span data-whoid="4">—</span></div>
+          </div>
+          <h1 class="h-title">Race like Ferrari</h1>
+          <p class="h-sub">"Ferrari doesn't reward the fastest driver — it rewards the most consistent one. Let's see how you perform."</p>
+          <div class="divider"></div>
+
+          <!-- 4A intro -->
+          <div id="s4-intro" style="text-align:center;padding:16px 0 40px">
+            <p style="max-width:56ch;margin:0 auto 24px;color:var(--txt-dim)">A timed lap around an iconic Ferrari circuit. Steer to hold the racing line — off-track drops your precision. Rewards consistency, not just raw speed.</p>
+            <div style="display:inline-flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:26px">
+              <span class="keycap">◄ / A</span><span style="color:var(--txt-mute);align-self:center;font-size:13px">steer left</span>
+              <span class="keycap">► / D</span><span style="color:var(--txt-mute);align-self:center;font-size:13px">steer right</span>
+            </div><br>
+            <button class="btn big" onclick="s4start()">Start the Lap <span class="chev">→</span></button>
+          </div>
+
+          <!-- 4A : DRIVING GAME -->
+          <div id="s4-race" style="display:none">
+            <div class="simstage">
+              <div class="sim-hud">
+                <div><div class="t">LAP TIME</div><div class="big" id="s4-lap">00:00.0</div></div>
+                <div style="text-align:center"><div class="t">CIRCUIT</div><div class="big" style="font-size:20px" id="s4-track">MONZA</div></div>
+                <div style="text-align:center"><div class="t">PROGRESS</div><div class="big" id="s4-progress">0%</div></div>
+                <div style="text-align:right"><div class="t">PRECISION</div><div class="big" id="s4-prec">100%</div></div>
+              </div>
+              <canvas id="s4-canvas" width="1000" height="440" style="display:block;width:100%;background:#0a0a0c"></canvas>
+              <div class="interrupt" id="s4-interrupt">
+                <div class="warn-t">Race Interruption</div>
+                <div class="warn-s">CAR NEEDS SERVICE · RETURN TO PIT</div>
+                <p style="color:var(--txt-dim);margin-bottom:20px">"Driver, the race isn't over. Your car needs you back in the pit."</p>
+                <button class="btn" onclick="s4toPit()">Return to Pit Lane →</button>
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:14px;color:var(--txt-mute);font-family:var(--mono);font-size:12px">Hold <b style="color:#fff">◄ / ►</b> (or <b style="color:#fff">A / D</b>) to steer. Stay on the grey tarmac to keep precision high.</div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px" id="s4-touch">
+              <button class="btn ghost" ontouchstart="s4key('L',1)" ontouchend="s4key('L',0)" onmousedown="s4key('L',1)" onmouseup="s4key('L',0)" onmouseleave="s4key('L',0)">◄ Left</button>
+              <button class="btn ghost" ontouchstart="s4key('R',1)" ontouchend="s4key('R',0)" onmousedown="s4key('R',1)" onmouseup="s4key('R',0)" onmouseleave="s4key('R',0)">Right ►</button>
+            </div>
+          </div>
+
+          <!-- 4B : PIT STOP GAME (spacebar) -->
+          <div id="s4-pit" style="display:none">
+            <div class="pittask">
+              <div class="head">
+                <div><b>Pit Stop Challenge · Every Second Counts</b><div style="font-size:12px;color:var(--txt-dim);margin-top:2px">Change all four wheels. Hit <b style="color:#fff">SPACE</b> when the marker is inside the green zone. Miss and the marker resets.</div></div>
+                <div class="pit-clock" id="pit-clock">0.00s</div>
+              </div>
+
+              <div class="pit-crew">
+                <div class="crew-wheels" id="crew-wheels">
+                  <div class="wheelslot" data-w="0"><div class="ws-ring"></div><span>FL</span></div>
+                  <div class="wheelslot" data-w="1"><div class="ws-ring"></div><span>FR</span></div>
+                  <div class="wheelslot" data-w="2"><div class="ws-ring"></div><span>RL</span></div>
+                  <div class="wheelslot" data-w="3"><div class="ws-ring"></div><span>RR</span></div>
+                </div>
+
+                <div class="timing-wrap" id="timing-wrap">
+                  <div class="timing-label" id="timing-label">Wheel 1 of 4 — Front Left</div>
+                  <div class="timing-bar">
+                    <div class="timing-zone" id="timing-zone"></div>
+                    <div class="timing-marker" id="timing-marker"></div>
+                  </div>
+                  <div class="timing-hint" id="timing-hint">Press <b>SPACE</b> to fit the wheel</div>
+                </div>
+              </div>
+
+              <div style="text-align:center;margin-top:8px" id="pit-startwrap">
+                <button class="btn big" id="pit-start" onclick="pitStart()">Start Pit Stop <span class="chev">→</span></button>
+                <div style="font-size:12px;color:var(--txt-mute);margin-top:10px">Powered by HP OmniBook · on-device NPU logs your split instantly.</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="s4-done" style="display:none">
+            <div class="done-banner"><div class="ic">✓</div><div><b>Pit stop complete — time locked.</b><br><span style="color:var(--txt-dim);font-size:13px">Your lap and pit performance are saved to your Journey ID.</span></div></div>
+            <div class="scores-grid" style="max-width:760px">
+              <div class="sc-cell"><div class="lab">Lap Time</div><div class="v" style="font-size:24px" id="s4-final-lap">—</div></div>
+              <div class="sc-cell"><div class="lab">Precision</div><div class="v" id="s4-final-prec">—<small>%</small></div></div>
+              <div class="sc-cell"><div class="lab">Consistency</div><div class="v" id="s4-final-cons">—<small>%</small></div></div>
+              <div class="sc-cell"><div class="lab">Pit Time</div><div class="v" style="font-size:24px" id="s4-final-pit">—</div></div>
+            </div>
+            <button class="btn big" style="margin-top:22px" onclick="go(5)">See my Final Score <span class="chev">→</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATION 5 : FINAL SCORE ============ -->
+    <section class="station" data-st="5">
+      <div class="wrap">
+        <div class="kioskhead">
+          <div class="eyebrow">Station 05 · Takeaway Kiosk</div>
+          <div class="flowdots"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div>
+        </div>
+
+        <div class="gate" data-gate="5">
+          <div class="lockicon">🔒</div>
+          <h2>Enter your Unique ID</h2>
+          <p>One last time. Enter your Unique Journey ID to reveal your Ferrari Performance Score.</p>
+          <input class="idinput" data-idinput="5" placeholder="FP26-XXXXXX-0000" oninput="this.value=this.value.toUpperCase()">
+          <div class="err" data-err="5"></div>
+          <button class="btn big" style="margin-top:20px;width:100%" onclick="unlock(5)">Reveal my Score <span class="chev">→</span></button>
+          <div class="recent" data-recent="5"></div>
+        </div>
+
+        <div data-content="5" style="display:none">
+          <div class="kioskhead" style="margin-top:-4px">
+            <div class="id-chip"><span class="dot"></span> Driver <b data-who="5">—</b> · <span data-whoid="5">—</span></div>
+          </div>
+          <h1 class="h-title">Your Ferrari Performance Score</h1>
+          <p class="h-sub">Every millisecond counts. Every move matters.</p>
+          <div class="divider"></div>
+
+          <div class="finalgrid">
+            <div class="perf-passport">
+              <div class="pp2-head">
+                <div class="pp-logos"><div class="fe-badge">S</div><div class="pp-title">Ferrari<small>Performance Passport</small></div></div>
+                <div class="hp-badge">hp</div>
+              </div>
+              <div class="pp-photo" id="f5-photo" style="width:96px;height:96px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+              <div class="pp-name" id="f5-name" style="font-size:26px">DRIVER</div>
+              <div class="pp-role">"The Strategist"</div>
+              <div class="overall">
+                <div class="ring" id="f5-ring"><div class="n" id="f5-overall">—<small>/100</small></div></div>
+                <div>
+                  <div style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--txt-mute);text-transform:uppercase">Overall Performance Score</div>
+                  <div style="color:var(--txt-dim);font-size:13px;margin-top:6px">Built to perform. Driven by you.</div>
+                </div>
+              </div>
+              <div class="pp-foot" style="border-top:none;padding-top:16px">
+                <div><div class="lab">Driver Number</div><div class="pp-num" id="f5-num" style="font-size:22px">—</div></div>
+                <div><div class="lab">Unique Journey ID</div><div class="pp-jid" id="f5-id" style="font-size:11px">—</div></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="scores-grid">
+                <div class="sc-cell"><div class="lab">Lap Time</div><div class="v" style="font-size:24px" id="f5-lap">—</div></div>
+                <div class="sc-cell"><div class="lab">Precision</div><div class="v" id="f5-prec">—<small>%</small></div></div>
+                <div class="sc-cell"><div class="lab">Consistency</div><div class="v" id="f5-cons">—<small>%</small></div></div>
+                <div class="sc-cell"><div class="lab">Strategy</div><div class="v" id="f5-strat">—<small>/100</small></div></div>
+                <div class="sc-cell"><div class="lab">Creativity</div><div class="v" id="f5-crea">—<small>/100</small></div></div>
+                <div class="sc-cell"><div class="lab">Reflexes</div><div class="v" id="f5-ref">—<small>/100</small></div></div>
+              </div>
+
+              <div class="leaderboard" style="margin-top:20px">
+                <div class="lb-head"><h3>Daily Leaderboard</h3><span style="font-family:var(--mono);font-size:11px;color:var(--txt-mute)">Updated live</span></div>
+                <div id="lb-rows"></div>
+              </div>
+
+              <div style="display:flex;gap:12px;margin-top:20px">
+                <button class="btn ghost" onclick="toast('Race-car visual + passport saved to your Journey ID')">Download my visual</button>
+                <button class="btn hp big" style="flex:1" onclick="restart()">Finish · New Driver <span class="chev">→</span></button>
+              </div>
+              <div class="locked-note">Takeaway: name + photo + race car + full performance DNA, saved under one Unique ID.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ============ COPILOT SEPARATE WINDOW ============ -->
+<div class="winmodal" id="copilotWin">
+  <div class="win">
+    <div class="win-bar">
+      <div class="win-dots"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="win-title"><span class="ci"></span> Microsoft Copilot — Separate Window</div>
+      <button class="win-close" onclick="closeCopilot()">✕</button>
+    </div>
+    <div class="win-body">
+      <div class="cp-brief">📎 <b>Race Car Design Brief</b> uploaded from HP Laptop · <span id="cp-driver">Driver</span> · No. <span id="cp-num">—</span></div>
+      <div id="cp-thread">
+        <div class="cp-msg ai"><div class="av">✦</div><div class="cp-bubble">Brief received. I can turn this into a personalised Ferrari-inspired race-car concept. Pick a prompt below or type your own.</div></div>
+      </div>
+      <div class="cp-prompts" id="cp-prompts">
+        <button class="cp-prompt" onclick="cpPrompt(this,'Create my race car based on this brief.')">Create my race car based on this brief.</button>
+        <button class="cp-prompt" onclick="cpPrompt(this,'Make the design more aggressive.')">Make the design more aggressive.</button>
+        <button class="cp-prompt" onclick="cpPrompt(this,'Give it a futuristic Ferrari-inspired aesthetic.')">Give it a futuristic aesthetic.</button>
+        <button class="cp-prompt" onclick="cpPrompt(this,'Add my racing number and personalise the livery.')">Add my number &amp; livery.</button>
+      </div>
+      <div class="cp-inputrow">
+        <input id="cp-input" placeholder="Ask Copilot to refine the design…" onkeydown="if(event.key==='Enter')cpSend()">
+        <button class="cp-send" onclick="cpSend()">Send</button>
+      </div>
+      <div style="text-align:center;margin-top:18px;display:none" id="cp-finish-wrap">
+        <button class="btn" onclick="cpFinish()">Send concept back to HP Laptop →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="g">✓</span> <span id="toast-msg"></span></div>
+
+<script>
+/* ============================================================
+   SHARED STATE — simulates a backend keyed by Unique Journey ID.
+   Each "station" is a separate laptop that reads/writes this record.
+   ============================================================ */
+const DB = {};              // { ID : driverRecord }
+let currentId = null;       // the ID loaded on the *current* station
+const picks = {};           // temp questionnaire selections
+let unlockedFor = {2:false,3:false,4:false,5:false};
+
+/* seed leaderboard */
+const seedLB = [
+  {name:'ARJUN', score:96, time:'01:19.02'},
+  {name:'MEERA', score:93, time:'01:21.44'},
+  {name:'ROHAN', score:90, time:'01:23.10'},
+  {name:'PRIYA', score:87, time:'01:25.67'},
+  {name:'DEV',   score:84, time:'01:27.33'},
+];
+
+/* ---------- station tabs ---------- */
+const stations = [
+  {n:1,k:'01',t:'Driver Scan'},
+  {n:2,k:'02',t:'Create Car'},
+  {n:3,k:'03',t:'Strategist'},
+  {n:4,k:'04',t:'Race & Pit'},
+  {n:5,k:'05',t:'Final Score'},
+];
+const bar = document.getElementById('stationbar');
+const spacer = bar.querySelector('.sb-spacer');
+stations.forEach(s=>{
+  const b=document.createElement('button');
+  b.className='sb-tab';b.dataset.tab=s.n;
+  b.innerHTML=`<span class="k">STATION ${s.k}</span><span class="n">${s.t}</span>`;
+  b.onclick=()=>go(s.n);
+  bar.insertBefore(b,spacer);
+});
+
+let cur=0;
+function go(n){
+  // stop any running Station-4 game loops when leaving
+  if(typeof s4running!=='undefined'){s4running=false;}
+  if(typeof pitActive!=='undefined'){pitActive=false;}
+  if(typeof s4raf!=='undefined'){cancelAnimationFrame(s4raf);}
+  if(typeof pitRaf!=='undefined'){cancelAnimationFrame(pitRaf);}
+  cur=n;
+  document.querySelectorAll('.station').forEach(s=>s.classList.toggle('on',+s.dataset.st===n));
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.toggle('on',+t.dataset.tab===n));
+  document.getElementById('screen').scrollTop=0;
+  // gate logic for stations 2-5
+  if(n>=2){ refreshGate(n); }
+  window.scrollTo(0,0);
+}
+
+/* ---------- generic chip picker ---------- */
+function pick(el,group,val){
+  el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel','hp'));
+  el.classList.add('sel');
+  if(group==='solve'||group==='s2env'||group==='s2colour') el.classList.add('hp');
+  picks[group]=val;
+  if(group.startsWith('s2')) s2validate(); else s1validate();
+}
+
+/* ============ STATION 1 ============ */
+let driverPhoto=null;   // dataURL of uploaded driver image
+function s1photo(e){
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    driverPhoto=r.result;
+    document.getElementById('pu-thumb').innerHTML=`<img src="${driverPhoto}" alt="">`;
+    document.getElementById('photo-drop').classList.add('filled');
+    // live preview passport
+    document.getElementById('s1-pv-photo').innerHTML=`<img src="${driverPhoto}" alt="">`;
+    s1validate();
+  };
+  r.readAsDataURL(f);
+}
+function s1validate(){
+  const name=document.getElementById('drv-name').value.trim();
+  document.getElementById('pv-name').textContent = name? name.toUpperCase():'DRIVER';
+  document.getElementById('s1-preview').style.opacity = (name||driverPhoto)?'1':'.5';
+  const ok = name && driverPhoto && picks.matters && picks.solve;
+  document.getElementById('s1-btn').disabled=!ok;
+}
+function genId(name){
+  const n=(name||'DRV').replace(/[^A-Z]/gi,'').toUpperCase().slice(0,6)||'DRIVER';
+  const rand=Math.floor(1000+Math.random()*8999);
+  return `FP26-${n}-${rand}`;
+}
+function genNum(){return String(Math.floor(100000+Math.random()*899999));}
+
+function s1generate(){
+  const name=document.getElementById('drv-name').value.trim();
+  const id=genId(name);
+  const num=genNum();
+  DB[id]={
+    id,name,num,photo:driverPhoto,
+    matters:picks.matters, solve:picks.solve,
+    step1:true,
+    profileTag: picks.solve==='Data'?'The Strategist':picks.solve==='Creativity'?'The Innovator':picks.solve==='Experience'?'The Veteran':'The Team Player'
+  };
+  currentId=id;
+  // fill result
+  if(driverPhoto) document.getElementById('fp-photo').innerHTML=`<img src="${driverPhoto}" alt="">`;
+  document.getElementById('fp-name').textContent=name.toUpperCase();
+  document.getElementById('fp-num').textContent=num;
+  document.getElementById('fp-id').textContent=id;
+  document.getElementById('sum-name').textContent=name;
+  document.getElementById('sum-matters').textContent=picks.matters;
+  document.getElementById('sum-solve').textContent=picks.solve;
+  document.getElementById('sum-num').textContent=num;
+  document.getElementById('handoff-id').textContent=id;
+  document.getElementById('s1-form').style.display='none';
+  document.getElementById('s1-result').style.display='block';
+  window.scrollTo(0,0);
+}
+/* ============ ID GATE (stations 2–5) ============ */
+function refreshGate(n){
+  const gate=document.querySelector(`[data-gate="${n}"]`);
+  const content=document.querySelector(`[data-content="${n}"]`);
+  if(unlockedFor[n]){ gate.style.display='none';content.style.display='block'; return; }
+  gate.style.display='block';content.style.display='none';
+  // recent IDs helper
+  const ids=Object.keys(DB);
+  const rec=document.querySelector(`[data-recent="${n}"]`);
+  if(ids.length){
+    rec.innerHTML='Registered this session: '+ids.map(id=>`<b onclick="fillId(${n},'${id}')">${id}</b>`).join(' · ');
+  } else {
+    rec.innerHTML='No drivers registered yet — complete Station 01 first.';
+  }
+}
+function fillId(n,id){ document.querySelector(`[data-idinput="${n}"]`).value=id; }
+function unlock(n){
+  const val=document.querySelector(`[data-idinput="${n}"]`).value.trim().toUpperCase();
+  const err=document.querySelector(`[data-err="${n}"]`);
+  if(!val){err.textContent='Enter your Unique Journey ID.';return;}
+  if(!DB[val]){err.textContent='ID not found. Check the passport from Station 01.';return;}
+  // step-order enforcement (soft)
+  err.textContent='';
+  unlockedFor[n]=true; currentId=val;
+  const rec=DB[val];
+  document.querySelectorAll(`[data-who="${n}"]`).forEach(e=>e.textContent=rec.name);
+  document.querySelectorAll(`[data-whoid="${n}"]`).forEach(e=>e.textContent=val);
+  refreshGate(n);
+  if(n===2) prepStation2(rec);
+  if(n===5) renderFinal(rec);
+  toast('Profile loaded — welcome back, '+rec.name);
+}
+
+/* ============ STATION 2 ============ */
+function prepStation2(rec){
+  document.getElementById('s2-quiz').style.display='block';
+  document.getElementById('s2-brief').style.display='none';
+  document.getElementById('s2-reveal').style.display='none';
+}
+function s2validate(){
+  const ok=picks.s2personality&&picks.s2env&&picks.s2design&&picks.s2colour;
+  document.getElementById('s2-gen').disabled=!ok;
+}
+function s2generateBrief(){
+  const rec=DB[currentId];
+  rec.car={pers:picks.s2personality,env:picks.s2env,design:picks.s2design,colour:picks.s2colour};
+  rec.raceNum=String(Math.floor(1+Math.random()*98));
+  document.getElementById('b-name').textContent=rec.name;
+  document.getElementById('b-num').textContent=rec.raceNum;
+  document.getElementById('b-pers').textContent=picks.s2personality;
+  document.getElementById('b-env').textContent=picks.s2env;
+  document.getElementById('b-design').textContent=picks.s2design;
+  document.getElementById('b-colour').textContent=picks.s2colour;
+  document.getElementById('b-perf').textContent=rec.matters;
+  document.getElementById('s2-quiz').style.display='none';
+  document.getElementById('s2-brief').style.display='block';
+  // countdown flourish
+  let t=2;const tel=document.getElementById('s2-timer');
+  const iv=setInterval(()=>{t--;tel.textContent='00:0'+Math.max(t,0);if(t<=0)clearInterval(iv);},700);
+}
+
+/* ---- Copilot separate window ---- */
+let cpStep=0;
+function openCopilot(){
+  const rec=DB[currentId];
+  document.getElementById('cp-driver').textContent=rec.name;
+  document.getElementById('cp-num').textContent=rec.raceNum||'—';
+  document.getElementById('copilotWin').classList.add('on');
+}
+function closeCopilot(){document.getElementById('copilotWin').classList.remove('on');}
+function cpPrompt(el,text){el.disabled=true;runCp(text);}
+function cpSend(){
+  const inp=document.getElementById('cp-input');
+  if(!inp.value.trim())return;
+  runCp(inp.value.trim());inp.value='';
+}
+function runCp(text){
+  const thread=document.getElementById('cp-thread');
+  thread.insertAdjacentHTML('beforeend',`<div class="cp-msg you"><div class="av">You</div><div class="cp-bubble">${esc(text)}</div></div>`);
+  cpStep++;
+  const rec=DB[currentId];
+  setTimeout(()=>{
+    let reply,render='';
+    if(cpStep===1){
+      reply=`Generating a ${rec.car.design.toLowerCase()} ${rec.car.colour} Ferrari concept for a ${rec.car.env.toLowerCase()} setting, driver personality "${rec.car.pers}". Here's the first pass:`;
+      render=carRender(rec);
+    } else if(cpStep===2){
+      reply='Sharpened the aero, lowered the stance, more aggressive front splitter. Updated concept:';
+      render=carRender(rec);
+    } else {
+      reply=`Applied race number ${rec.raceNum} and your personalised livery. This concept is ready to send back to the HP Laptop.`;
+      render=carRender(rec);
+      document.getElementById('cp-finish-wrap').style.display='block';
+    }
+    thread.insertAdjacentHTML('beforeend',`<div class="cp-msg ai"><div class="av">✦</div><div class="cp-bubble">${reply}${render}</div></div>`);
+    thread.parentElement.scrollTop=thread.parentElement.scrollHeight;
+  },600);
+  document.getElementById('cp-thread').parentElement.scrollTop=99999;
+}
+function carRender(rec){
+  return `<div class="cp-render"><div class="stage">
+    <svg viewBox="0 0 320 130" width="80%">
+    <defs><linearGradient id="cg2" x1="0" x2="1"><stop offset="0" stop-color="#ff2b2b"/><stop offset="1" stop-color="#8a0000"/></linearGradient></defs>
+    <path d="M20 90 Q40 78 70 76 L110 74 Q140 55 180 55 L225 56 Q255 58 280 72 L300 78 Q312 82 310 92 L305 96 L20 96 Z" fill="url(#cg2)"/>
+    <path d="M120 74 Q140 60 172 60 L210 61 Q225 62 235 70 Z" fill="#111"/>
+    <rect x="150" y="86" width="30" height="16" rx="3" fill="#fff"/><text x="165" y="98" font-family="Rajdhani" font-weight="700" font-size="13" fill="#000" text-anchor="middle">${rec.raceNum}</text>
+    <circle cx="80" cy="98" r="20" fill="#111" stroke="#333" stroke-width="3"/><circle cx="250" cy="98" r="20" fill="#111" stroke="#333" stroke-width="3"/>
+    </svg>
+  </div></div>`;
+}
+function cpFinish(){
+  const rec=DB[currentId];rec.step2=true;
+  closeCopilot();
+  document.getElementById('rv-name').textContent=rec.name.toUpperCase();
+  document.getElementById('rv-num').innerHTML=rec.raceNum+'<small>Race Number</small>';
+  if(rec.photo){const dp=document.getElementById('rv-driverphoto');dp.style.display='block';dp.innerHTML=`<img src="${rec.photo}" style="width:100%;height:100%;object-fit:cover">`;}
+  document.getElementById('carnum').textContent=rec.raceNum;
+  document.getElementById('s2-brief').style.display='none';
+  document.getElementById('s2-reveal').style.display='block';
+  window.scrollTo(0,0);
+  toast('Concept received from Copilot');
+}
+
+/* ============ STATION 3 ============ */
+let s3timer,s3time,s3startT;
+function s3start(){
+  document.getElementById('s3-intro').style.display='none';
+  document.getElementById('s3-game').style.display='block';
+  s3time=100;s3startT=Date.now();
+  s3timer=setInterval(()=>{
+    s3time-=1.4;
+    document.getElementById('s3-timerfill').style.width=Math.max(s3time,0)+'%';
+    if(s3time<=0){clearInterval(s3timer);s3finish(false);}
+  },400);
+  s3phase(1);
+}
+function s3phase(p){
+  const box=document.getElementById('s3-action');
+  ['1','2','3','4'].forEach(i=>{
+    const el=document.getElementById('ms-'+i);
+    el.classList.toggle('active',+i===p);
+    el.classList.toggle('done',+i<p);
+  });
+  if(p===1){
+    box.innerHTML=`<div style="font-size:13px;color:var(--txt-dim);margin-bottom:12px">Ask AI Companion to summarise the long telemetry/weather report.</div>
+      <button class="btn hp" style="width:100%" onclick="s3sum()">Summarise report ✦</button>`;
+  }
+}
+function s3sum(){
+  const box=document.getElementById('s3-action');
+  box.innerHTML=`<div class="cp-brief" style="color:#cfe">✦ <b>Summary:</b> Heavy rain in ~2 min. Softs 4 laps past optimal. P3 pitted for inters, going fast. Undercut + safety-car risk rising.</div>
+    <div style="font-size:13px;color:var(--txt-dim);margin-bottom:10px">Now — what's actually happening on track?</div>
+    <div class="decide-btns">
+      <button class="chip" onclick="s3analyse(this,true)">Rain + worn tyres = imminent grip loss</button>
+      <button class="chip" onclick="s3analyse(this,false)">Track is stable, hold position</button>
+    </div>`;
+  document.getElementById('ms-1').classList.add('done');
+  s3phase(2);
+  document.getElementById('ms-2').classList.add('active');
+}
+let s3correct=0;
+function s3analyse(el,right){
+  if(right)s3correct++;
+  el.parentElement.querySelectorAll('.chip').forEach(c=>c.disabled=true);
+  el.classList.add(right?'sel':'sel');el.style.borderColor=right?'var(--ok)':'var(--red)';
+  s3phase(3);document.getElementById('ms-2').classList.add('done');document.getElementById('ms-3').classList.add('active');
+  const box=document.getElementById('s3-action');
+  box.insertAdjacentHTML('beforeend',`<div style="margin-top:16px;font-size:13px;color:var(--txt-dim);margin-bottom:10px"><b>Decide:</b> Pit now or stay out?</div>
+    <div class="decide-btns">
+      <button class="chip hp" onclick="s3decide(this,true)">🔧 PIT NOW · fit inters</button>
+      <button class="chip" onclick="s3decide(this,false)">Stay out · gamble</button>
+    </div>`);
+}
+function s3decide(el,right){
+  if(right)s3correct++;
+  el.parentElement.querySelectorAll('.chip').forEach(c=>c.disabled=true);
+  el.style.borderColor=right?'var(--ok)':'var(--red)';el.classList.add('sel');
+  s3phase(4);document.getElementById('ms-3').classList.add('done');document.getElementById('ms-4').classList.add('active');
+  const box=document.getElementById('s3-action');
+  box.insertAdjacentHTML('beforeend',`<div style="margin-top:16px;font-size:13px;color:var(--txt-dim);margin-bottom:10px"><b>Communicate:</b> draft the team call.</div>
+    <button class="btn" style="width:100%" onclick="s3finish(true)">✦ Draft &amp; send: "Box this lap, inters ready"</button>`);
+}
+function s3finish(complete){
+  clearInterval(s3timer);
+  document.getElementById('ms-4').classList.add('done');
+  const rt=((Date.now()-s3startT)/1000).toFixed(1);
+  const acc=Math.round((s3correct/2)*100);
+  const eff=complete?Math.max(70,100-Math.round(rt)):55;
+  const score=Math.round(acc*0.5+eff*0.3+(complete?20:0));
+  const rec=DB[currentId];
+  rec.step3=true;rec.strat={acc,rt,eff,score};
+  document.getElementById('s3-acc').innerHTML=acc+'<small>%</small>';
+  document.getElementById('s3-rt').innerHTML=rt+'<small>s</small>';
+  document.getElementById('s3-eff').innerHTML=eff+'<small>%</small>';
+  document.getElementById('s3-score').innerHTML=Math.min(score,100)+'<small>/100</small>';
+  document.getElementById('s3-game').style.display='none';
+  document.getElementById('s3-done').style.display='block';
+  window.scrollTo(0,0);
+}
+
+/* ============ STATION 4A · DRIVING GAME (canvas, top-down) ============ */
+const tracks=['MONZA','FIORANO','SILVERSTONE'];
+let s4raf,s4running=false,s4start_t,s4prec,s4onCount,s4totalCount;
+const s4keys={L:false,R:false};
+// car state
+let car={x:0,angle:0};      // x = lateral offset from track centre (px), angle in rad
+let scrollY=0;              // how far "down" the track we've travelled
+const TRACK_LEN=6000;       // total virtual length of the lap
+const ROAD_W=150;           // half-width of tarmac
+let s4cvs,s4ctx;
+
+function trackCentre(y){    // returns lateral centre-line offset for a given distance y — the winding track
+  return Math.sin(y/520)*150 + Math.sin(y/210)*60;
+}
+function s4key(dir,on){ if(dir==='L')s4keys.L=!!on; else s4keys.R=!!on; }
+
+function s4start(){
+  document.getElementById('s4-intro').style.display='none';
+  document.getElementById('s4-race').style.display='block';
+  document.getElementById('s4-interrupt').classList.remove('on');
+  document.getElementById('s4-track').textContent=tracks[Math.floor(Math.random()*3)];
+  s4cvs=document.getElementById('s4-canvas');s4ctx=s4cvs.getContext('2d');
+  car={x:trackCentre(0),angle:0};scrollY=0;s4prec=100;s4onCount=0;s4totalCount=0;
+  s4running=true;s4start_t=performance.now();
+  s4keys.L=s4keys.R=false;
+  cancelAnimationFrame(s4raf);
+  s4loop();
+}
+function s4loop(){
+  if(!s4running)return;
+  const now=performance.now();
+  const t=(now-s4start_t)/1000;
+  const speed=13;                 // forward units per frame
+  scrollY+=speed;
+  // steering
+  if(s4keys.L)car.x-=4.2;
+  if(s4keys.R)car.x+=4.2;
+  // where should the car be to be centred?
+  const centre=trackCentre(scrollY);
+  const off=Math.abs(car.x-centre);
+  const onRoad=off<ROAD_W-16;
+  s4totalCount++; if(onRoad)s4onCount++;
+  if(!onRoad){ s4prec=Math.max(50,s4prec-0.35); car.x+= (car.x>centre?-1.2:1.2); } // resist going too far off
+  car.angle=Math.max(-0.4,Math.min(0.4,(car.x-centre)/220 + (s4keys.R?0.12:0)-(s4keys.L?0.12:0)));
+
+  s4draw(centre);
+  // HUD
+  document.getElementById('s4-lap').textContent=fmt(t);
+  const prog=Math.min(100,Math.round(scrollY/TRACK_LEN*100));
+  document.getElementById('s4-progress').textContent=prog+'%';
+  document.getElementById('s4-prec').textContent=Math.round(s4prec)+'%';
+
+  // Race Interruption at ~65% of the lap (per brief)
+  if(prog>=65){ s4interrupt(t); return; }
+  s4raf=requestAnimationFrame(s4loop);
+}
+function s4draw(centre){
+  const W=s4cvs.width,H=s4cvs.height,ctx=s4ctx;
+  ctx.clearRect(0,0,W,H);
+  // grass
+  ctx.fillStyle='#0e130e';ctx.fillRect(0,0,W,H);
+  const camX=car.x;                 // camera follows car laterally
+  const horizon=90;
+  // draw road as vertical ribbon receding — sample many slices
+  for(let sy=H;sy>=horizon;sy-=6){
+    const depth=(H-sy)/(H-horizon);          // 0 near .. 1 far
+    const worldY=scrollY + depth*1400;
+    const c=trackCentre(worldY);
+    const scale=1-depth*0.72;                 // perspective narrowing
+    const screenX=W/2 + (c-camX)*scale;
+    const w=ROAD_W*scale;
+    // tarmac
+    ctx.fillStyle= (Math.floor(worldY/60)%2? '#1b1b20':'#191a1f');
+    ctx.fillRect(screenX-w,sy,w*2,7);
+    // kerbs
+    const kerb=Math.floor(worldY/26)%2? '#d40000':'#f2f2f2';
+    ctx.fillStyle=kerb;
+    ctx.fillRect(screenX-w-6*scale,sy,6*scale,7);
+    ctx.fillRect(screenX+w,sy,6*scale,7);
+    // centre dash
+    if(Math.floor(worldY/45)%2){ctx.fillStyle='#3a3a42';ctx.fillRect(screenX-2*scale,sy,4*scale,7);}
+  }
+  // start/finish check line at very top when near lap end
+  // the Ferrari car (bottom centre)
+  const cx=W/2 + (centre-camX)*1.0; // near-plane centre
+  drawFerrari(ctx, W/2, H-70, car.angle);
+}
+function drawFerrari(ctx,x,y,ang){
+  ctx.save();ctx.translate(x,y);ctx.rotate(ang);
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.45)';ctx.beginPath();ctx.ellipse(0,26,34,12,0,0,7);ctx.fill();
+  // F1-ish top-down body
+  const g=ctx.createLinearGradient(-20,0,20,0);g.addColorStop(0,'#8a0000');g.addColorStop(.5,'#ff2b2b');g.addColorStop(1,'#8a0000');
+  ctx.fillStyle=g;
+  // rear wing
+  ctx.fillRect(-26,20,52,8);
+  // body
+  ctx.beginPath();
+  ctx.moveTo(0,-42);            // nose
+  ctx.lineTo(8,-20);
+  ctx.lineTo(10,24);
+  ctx.lineTo(-10,24);
+  ctx.lineTo(-8,-20);
+  ctx.closePath();ctx.fill();
+  // front wing
+  ctx.fillRect(-22,-40,44,7);
+  // sidepods
+  ctx.fillStyle='#b30000';ctx.fillRect(-20,-6,10,22);ctx.fillRect(10,-6,10,22);
+  // tyres
+  ctx.fillStyle='#0c0c0c';
+  ctx.fillRect(-26,-30,10,16);ctx.fillRect(16,-30,10,16);
+  ctx.fillRect(-26,10,10,18);ctx.fillRect(16,10,10,18);
+  // cockpit / halo
+  ctx.fillStyle='#111';ctx.beginPath();ctx.ellipse(0,-2,6,10,0,0,7);ctx.fill();
+  ctx.fillStyle='#ffd200';ctx.fillRect(-3,-6,6,3); // helmet fleck
+  ctx.restore();
+}
+function s4interrupt(t){
+  s4running=false;cancelAnimationFrame(s4raf);
+  window._s4lapT=t;
+  document.getElementById('s4-interrupt').classList.add('on');
+}
+function s4toPit(){
+  const rec=DB[currentId];
+  const onPct=s4totalCount? s4onCount/s4totalCount : 1;
+  rec.lap=fmt(window._s4lapT||24);
+  rec.prec=Math.round(s4prec);
+  rec.cons=Math.round(60+onPct*40);        // consistency = % of frames on the racing line
+  document.getElementById('s4-race').style.display='none';
+  document.getElementById('s4-pit').style.display='block';
+  // reset pit game UI
+  document.getElementById('pit-startwrap').style.display='block';
+  document.getElementById('pit-clock').textContent='0.00s';
+  document.getElementById('timing-label').textContent='Wheel 1 of 4 — Front Left';
+  document.getElementById('timing-hint').innerHTML='Press <b>SPACE</b> to fit the wheel';
+  document.querySelectorAll('.wheelslot').forEach(w=>w.classList.remove('active','done'));
+  window.scrollTo(0,0);
+}
+
+/* ============ STATION 4B · PIT STOP GAME (spacebar wheel-change) ============ */
+let pitActive=false,pitWheel=0,pitMarker=0,pitDir=1,pitRaf,pitStartT,pitZone,pitLabels=['Front Left','Front Right','Rear Left','Rear Right'];
+function pitStart(){
+  document.getElementById('pit-startwrap').style.display='none';
+  pitActive=true;pitWheel=0;pitStartT=performance.now();
+  document.querySelectorAll('.wheelslot').forEach(w=>w.classList.remove('active','done'));
+  nextWheel();
+  pitLoop();
+}
+function nextWheel(){
+  const slots=document.querySelectorAll('.wheelslot');
+  slots.forEach((w,i)=>{w.classList.toggle('active',i===pitWheel);});
+  document.getElementById('timing-label').textContent=`Wheel ${pitWheel+1} of 4 — ${pitLabels[pitWheel]}`;
+  // green zone shrinks / shifts each wheel for difficulty
+  const zoneW=Math.max(14,26-pitWheel*3);           // % width
+  const zoneStart=20+Math.random()*(60-zoneW);      // % position
+  pitZone=[zoneStart,zoneStart+zoneW];
+  const z=document.getElementById('timing-zone');
+  z.style.left=zoneStart+'%';z.style.width=zoneW+'%';
+  z.innerHTML='<span class="pin">FIT</span>';
+  pitMarker=0;pitDir=1;
+  pitSpeed=0.9+pitWheel*0.25;                        // marker speed % per frame
+}
+let pitSpeed=1;
+function pitLoop(){
+  if(!pitActive)return;
+  pitMarker+=pitDir*pitSpeed;
+  if(pitMarker>=100){pitMarker=100;pitDir=-1;}
+  if(pitMarker<=0){pitMarker=0;pitDir=1;}
+  document.getElementById('timing-marker').style.left=pitMarker+'%';
+  const el=((performance.now()-pitStartT)/1000).toFixed(2);
+  document.getElementById('pit-clock').textContent=el+'s';
+  pitRaf=requestAnimationFrame(pitLoop);
+}
+function pitHit(){
+  if(!pitActive)return;
+  const wrap=document.getElementById('timing-wrap');
+  const inZone=pitMarker>=pitZone[0]&&pitMarker<=pitZone[1];
+  if(inZone){
+    wrap.classList.remove('miss');wrap.classList.add('hit');
+    document.querySelectorAll('.wheelslot')[pitWheel].classList.remove('active');
+    document.querySelectorAll('.wheelslot')[pitWheel].classList.add('done');
+    pitWheel++;
+    if(pitWheel>=4){ pitFinish(); return; }
+    setTimeout(()=>{wrap.classList.remove('hit');nextWheel();},180);
+  } else {
+    // miss — flash and reset marker to start of this wheel
+    wrap.classList.remove('hit');wrap.classList.add('miss');
+    document.getElementById('timing-hint').innerHTML='Missed! Marker reset — hit <b>SPACE</b> inside the green zone';
+    pitMarker=0;pitDir=1;
+    setTimeout(()=>wrap.classList.remove('miss'),300);
+  }
+}
+function pitFinish(){
+  pitActive=false;cancelAnimationFrame(pitRaf);
+  const elapsed=(performance.now()-pitStartT)/1000;
+  const rec=DB[currentId];
+  rec.pit=elapsed.toFixed(2)+'s';rec.pitSec=elapsed;rec.step4=true;
+  document.getElementById('s4-final-lap').textContent=rec.lap;
+  document.getElementById('s4-final-prec').innerHTML=rec.prec+'<small>%</small>';
+  document.getElementById('s4-final-cons').innerHTML=rec.cons+'<small>%</small>';
+  document.getElementById('s4-final-pit').textContent=rec.pit;
+  document.getElementById('s4-pit').style.display='none';
+  document.getElementById('s4-done').style.display='block';
+  window.scrollTo(0,0);
+}
+
+/* keyboard: driving + spacebar pit */
+window.addEventListener('keydown',e=>{
+  if(s4running){
+    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){s4keys.L=true;e.preventDefault();}
+    if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){s4keys.R=true;e.preventDefault();}
+  }
+  if(pitActive && (e.code==='Space'||e.key===' ')){e.preventDefault();pitHit();}
+});
+window.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')s4keys.L=false;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')s4keys.R=false;
+});
+
+/* ============ STATION 5 ============ */
+function renderFinal(rec){
+  const strat=rec.strat?rec.strat.score:Math.round(80+Math.random()*15);
+  const crea=rec.solve==='Creativity'?Math.round(90+Math.random()*8):Math.round(78+Math.random()*15);
+  const ref=rec.prec?Math.round((rec.prec+ (rec.cons||85))/2):Math.round(85+Math.random()*10);
+  const prec=rec.prec||92, cons=rec.cons||88;
+  const overall=Math.round((strat+crea+ref+prec+cons)/5);
+  if(rec.photo) document.getElementById('f5-photo').innerHTML=`<img src="${rec.photo}" alt="">`;
+  document.getElementById('f5-name').textContent=rec.name.toUpperCase();
+  document.getElementById('f5-num').textContent=rec.num;
+  document.getElementById('f5-id').textContent=rec.id;
+  document.getElementById('f5-lap').textContent=rec.lap||'01:24.36';
+  document.getElementById('f5-prec').innerHTML=prec+'<small>%</small>';
+  document.getElementById('f5-cons').innerHTML=cons+'<small>%</small>';
+  document.getElementById('f5-strat').innerHTML=strat+'<small>/100</small>';
+  document.getElementById('f5-crea').innerHTML=crea+'<small>/100</small>';
+  document.getElementById('f5-ref').innerHTML=ref+'<small>/100</small>';
+  document.getElementById('f5-overall').innerHTML=overall+'<small>/100</small>';
+  document.getElementById('f5-ring').style.background=`conic-gradient(var(--red) ${overall*3.6}deg,#1c1c22 0)`;
+  document.getElementById('f5-ring').style.padding='6px';
+  document.getElementById('f5-ring').innerHTML=`<div style="width:100%;height:100%;border-radius:50%;background:#0c0c0f;display:flex;align-items:center;justify-content:center"><div class="n">${overall}<small>/100</small></div></div>`;
+  // leaderboard with driver inserted
+  const all=[...seedLB,{name:rec.name.toUpperCase(),score:overall,time:rec.lap||'01:24.36',me:true}]
+    .sort((a,b)=>b.score-a.score);
+  const rows=document.getElementById('lb-rows');rows.innerHTML='';
+  all.forEach((r,i)=>{
+    rows.insertAdjacentHTML('beforeend',
+      `<div class="lb-row ${r.me?'me':''}"><div class="lb-rank">${i+1}</div><div class="lb-name">${r.name}${r.me?' (You)':''}</div><div class="lb-time">${r.time}</div><div class="lb-score">${r.score}</div></div>`);
+  });
+}
+
+/* ============ utils ============ */
+function fmt(s){const m=Math.floor(s/60);const sec=(s%60).toFixed(1).padStart(4,'0');return `${String(m).padStart(2,'0')}:${sec}`;}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+let toastIv;
+function toast(msg){document.getElementById('toast-msg').textContent=msg;const t=document.getElementById('toast');t.classList.add('on');clearTimeout(toastIv);toastIv=setTimeout(()=>t.classList.remove('on'),2600);}
+function restart(){
+  // reset per-driver flow so the next visitor starts clean
+  currentId=null;driverPhoto=null;cpStep=0;
+  unlockedFor={2:false,3:false,4:false,5:false};
+  Object.keys(picks).forEach(k=>delete picks[k]);
+  // Station 1 back to form
+  document.getElementById('s1-form').style.display='block';
+  document.getElementById('s1-result').style.display='none';
+  document.getElementById('drv-name').value='';
+  document.getElementById('drv-photo').value='';
+  document.getElementById('pu-thumb').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3.2"/></svg>';
+  document.getElementById('photo-drop').classList.remove('filled');
+  document.getElementById('s1-pv-photo').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+  document.getElementById('pv-name').textContent='DRIVER';
+  document.querySelectorAll('.chip.sel').forEach(c=>c.classList.remove('sel','hp'));
+  document.getElementById('s1-btn').disabled=true;
+  // Station 4 sections reset
+  document.getElementById('s4-intro').style.display='block';
+  document.getElementById('s4-race').style.display='none';
+  document.getElementById('s4-pit').style.display='none';
+  document.getElementById('s4-done').style.display='none';
+  // Copilot thread reset
+  document.getElementById('cp-finish-wrap').style.display='none';
+  go(0);
+}
+
+go(0);
+</script>
+</body>
+</html>
