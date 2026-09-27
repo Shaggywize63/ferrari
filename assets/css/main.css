@@ -19,7 +19,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'forma-djr-text', 'Forma DJR Text', system-ui, sans-serif;
   background: var(--ferrari-darker);
   color: var(--text-primary);
   margin: 0;
@@ -27,6 +27,10 @@ body {
 }
 
 /* ── Typography ── */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: 'forma-djr-display', 'Forma DJR Display', 'forma-djr-text', system-ui, sans-serif;
+}
 .fw-600  { font-weight: 600; }
 .fw-700  { font-weight: 700; }
 .fw-800  { font-weight: 800; }
