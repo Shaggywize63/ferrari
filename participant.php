@@ -112,14 +112,23 @@ pageHead('My Dashboard');
     <!-- QR Code card -->
     <div class="col-md-4">
       <div class="card p-3 text-center h-100 d-flex flex-column align-items-center justify-content-center">
-        <div class="qr-card">
-          <img src="<?= sanitize($p['qr_image'] ?: '') ?>" alt="QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?data=<?= urlencode(APP_URL.'/participant-login.php?token='.$p['qr_token']) ?>&size=200x200&color=DC0000'">
-          <div class="qr-token"><?= chunk_split(strtoupper(substr($p['qr_token'],0,16)), 4, ' ') ?></div>
+        <div class="qr-print-area">
+          <div class="qr-card">
+            <img src="<?= sanitize($p['qr_image'] ?: '') ?>" alt="QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?data=<?= urlencode(APP_URL.'/participant-login.php?token='.$p['qr_token']) ?>&size=260x260&color=DC0000'">
+            <div class="qr-token"><?= chunk_split(strtoupper(substr($p['qr_token'],0,16)), 4, ' ') ?></div>
+          </div>
+          <div class="print-name"><?= sanitize($p['name']) ?></div>
+          <div class="print-event">A Pit Lane of Ferrari · Powered by HP</div>
         </div>
         <div class="mt-2" style="font-size:.8rem;color:var(--text-muted)">Scan to login at each stage</div>
-        <a href="<?= sanitize($p['qr_image'] ?: '') ?>" download="ferrari-qr-<?= $p['id'] ?>.png" class="btn btn-outline-ferrari btn-sm mt-2">
-          <i class="bi bi-download me-1"></i>Download QR
-        </a>
+        <div class="d-flex gap-2 mt-2">
+          <a href="<?= sanitize($p['qr_image'] ?: '') ?>" download="ferrari-qr-<?= $p['id'] ?>.png" class="btn btn-outline-ferrari btn-sm">
+            <i class="bi bi-download me-1"></i>Download
+          </a>
+          <button onclick="window.print()" class="btn btn-outline-ferrari btn-sm">
+            <i class="bi bi-printer me-1"></i>Print
+          </button>
+        </div>
       </div>
     </div>
   </div>

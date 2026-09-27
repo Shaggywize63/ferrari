@@ -38,11 +38,16 @@ pageHead('Leaderboard');
 
 <div class="container py-4">
   <!-- Header -->
-  <div class="text-center mb-4">
-    <h1 class="fw-900" style="font-size:clamp(1.75rem,4vw,3rem);letter-spacing:-1px">
-      <span style="color:var(--ferrari-red)">🏆</span> Leaderboard
-    </h1>
-    <p style="color:var(--text-muted)">Live standings · updates every 30 seconds</p>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="text-center flex-grow-1">
+      <h1 class="fw-900" style="font-size:clamp(1.75rem,4vw,3rem);letter-spacing:-1px">
+        <span style="color:var(--ferrari-red)">🏆</span> Leaderboard
+      </h1>
+      <p style="color:var(--text-muted)">Live standings · updates every 30 seconds</p>
+    </div>
+    <button class="leaderboard-fullscreen-btn ms-3" id="fsBtn" onclick="toggleFullscreen()">
+      <i class="bi bi-fullscreen me-1"></i>Fullscreen
+    </button>
   </div>
 
   <!-- Round filter pills -->
@@ -150,4 +155,27 @@ pageHead('Leaderboard');
     </div>
   </div>
 </div>
+<script>
+function toggleFullscreen() {
+  const btn = document.getElementById('fsBtn');
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    btn.innerHTML = '<i class="bi bi-fullscreen-exit me-1"></i>Exit';
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    btn.innerHTML = '<i class="bi bi-fullscreen me-1"></i>Fullscreen';
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fsBtn');
+  if (!document.fullscreenElement) btn.innerHTML = '<i class="bi bi-fullscreen me-1"></i>Fullscreen';
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  const btn = document.getElementById('fsBtn');
+  if (!document.webkitFullscreenElement) btn.innerHTML = '<i class="bi bi-fullscreen me-1"></i>Fullscreen';
+});
+</script>
 <?php pageFoot(); ?>

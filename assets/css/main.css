@@ -468,3 +468,40 @@ canvas { border-radius: 8px; }
   animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Print (passport / QR card) ── */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .participant-header, .btn, .stat-card, .card-header, table,
+  .progress-stage, .alert-ferrari, .alert-success-custom { display: none !important; }
+  .qr-print-area {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    page-break-inside: avoid;
+  }
+  .qr-card { box-shadow: none; border: 1px solid #ddd; }
+  .qr-card img { width: 260px; height: 260px; }
+  .print-name { font-size: 1.5rem; font-weight: 700; color: #000; margin-top: 1rem; }
+  .print-event { font-size: .9rem; color: #555; margin-top: .25rem; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+/* ── Fullscreen leaderboard ── */
+.leaderboard-fullscreen-btn {
+  background: transparent;
+  border: 1px solid rgba(244,242,238,.24);
+  color: #F4F2EE;
+  padding: .4rem .9rem;
+  border-radius: 6px;
+  font-size: .8rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s;
+}
+.leaderboard-fullscreen-btn:hover { background: rgba(255,255,255,.08); }
+:fullscreen .leaderboard-fullscreen-btn { border-color: var(--ferrari-red); color: var(--ferrari-red); }
+:-webkit-full-screen .leaderboard-fullscreen-btn { border-color: var(--ferrari-red); color: var(--ferrari-red); }
