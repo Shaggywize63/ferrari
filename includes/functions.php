@@ -23,6 +23,16 @@ function generateToken(int $length = 32): string {
     return bin2hex(random_bytes($length / 2));
 }
 
+function generateAccessCode(): string {
+    // Excludes confusable chars: 0/O, 1/I/L
+    $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    $code  = '';
+    for ($i = 0; $i < 6; $i++) {
+        $code .= $chars[random_int(0, strlen($chars) - 1)];
+    }
+    return $code;
+}
+
 function isAdminLoggedIn(): bool {
     return !empty($_SESSION['admin_id']);
 }

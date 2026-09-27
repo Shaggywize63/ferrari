@@ -23,13 +23,14 @@ if (!$token || !$roundId) {
 
 $pdo = db();
 
-// Resolve token (could be QR token or email)
-$stmt = $pdo->prepare('SELECT * FROM participants WHERE qr_token = ? OR email = ? LIMIT 1');
-$stmt->execute([$token, $token]);
+// Resolve by access code, mobile, or email
+$lookup = strtoupper($token);
+$stmt   = $pdo->prepare('SELECT * FROM participants WHERE access_code = ? OR phone = ? OR email = ? LIMIT 1');
+$stmt->execute([$lookup, $token, $token]);
 $participant = $stmt->fetch();
 
 if (!$participant) {
-    jsonOut(false, 'Participant not found. Invalid QR code or email.');
+    jsonOut(false, 'Participant not found. Check the access code, mobile number, or email.');
 }
 
 if ($participant['status'] === 'eliminated') {

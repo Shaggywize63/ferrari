@@ -2,17 +2,17 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/layout.php';
 
-$token = trim($_GET['token'] ?? $_SESSION['participant_token'] ?? '');
-if (!$token) redirect(APP_URL . '/participant-login.php');
+$code = strtoupper(trim($_GET['code'] ?? $_SESSION['participant_code'] ?? ''));
+if (!$code) redirect(APP_URL . '/participant-login.php');
 
 $pdo  = db();
-$stmt = $pdo->prepare('SELECT * FROM participants WHERE qr_token = ?');
-$stmt->execute([$token]);
+$stmt = $pdo->prepare('SELECT * FROM participants WHERE access_code = ?');
+$stmt->execute([$code]);
 $p = $stmt->fetch();
 if (!$p) redirect(APP_URL . '/participant-login.php');
 
-$_SESSION['participant_id']    = $p['id'];
-$_SESSION['participant_token'] = $token;
+$_SESSION['participant_id']   = $p['id'];
+$_SESSION['participant_code'] = $code;
 
 // Fetch leaderboard position
 $lb = $pdo->prepare('SELECT overall_rank, total_score, rounds_participated, highest_round FROM v_leaderboard WHERE id = ?');
@@ -109,22 +109,25 @@ pageHead('My Dashboard');
       </div>
     </div>
 
-    <!-- QR Code card -->
+    <!-- Access Code card -->
     <div class="col-md-4">
       <div class="card p-3 text-center h-100 d-flex flex-column align-items-center justify-content-center">
         <div class="qr-print-area">
-          <div class="qr-card">
-            <img src="<?= sanitize($p['qr_image'] ?: '') ?>" alt="QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?data=<?= urlencode(APP_URL.'/participant-login.php?token='.$p['qr_token']) ?>&size=260x260&color=DC0000'">
-            <div class="qr-token"><?= chunk_split(strtoupper(substr($p['qr_token'],0,16)), 4, ' ') ?></div>
-          </div>
+          <div style="margin-bottom:.75rem;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted)">Your Access Code</div>
+          <div id="accessCode" style="
+            font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:.25em;
+            color:var(--ferrari-red);font-family:'forma-djr-display',system-ui,sans-serif;
+            background:rgba(220,0,0,.07);border:2px solid rgba(220,0,0,.3);
+            border-radius:12px;padding:.6rem 1.5rem;display:inline-block;
+          "><?= sanitize($p['access_code']) ?></div>
           <div class="print-name"><?= sanitize($p['name']) ?></div>
           <div class="print-event">A Pit Lane of Ferrari · Powered by HP</div>
         </div>
-        <div class="mt-2" style="font-size:.8rem;color:var(--text-muted)">Scan to login at each stage</div>
+        <div class="mt-3" style="font-size:.8rem;color:var(--text-muted)">Show this code at each stage to check in</div>
         <div class="d-flex gap-2 mt-2">
-          <a href="<?= sanitize($p['qr_image'] ?: '') ?>" download="ferrari-qr-<?= $p['id'] ?>.png" class="btn btn-outline-ferrari btn-sm">
-            <i class="bi bi-download me-1"></i>Download
-          </a>
+          <button onclick="copyCode()" class="btn btn-outline-ferrari btn-sm" id="copyBtn">
+            <i class="bi bi-copy me-1"></i>Copy Code
+          </button>
           <button onclick="window.print()" class="btn btn-outline-ferrari btn-sm">
             <i class="bi bi-printer me-1"></i>Print
           </button>
@@ -210,4 +213,14 @@ pageHead('My Dashboard');
     </div>
   </div>
 </div>
+<script>
+function copyCode() {
+  const code = document.getElementById('accessCode').textContent.trim();
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!';
+    setTimeout(() => { btn.innerHTML = '<i class="bi bi-copy me-1"></i>Copy Code'; }, 2000);
+  });
+}
+</script>
 <?php pageFoot(); ?>

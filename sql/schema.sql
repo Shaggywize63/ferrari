@@ -61,20 +61,19 @@ INSERT INTO rounds (event_id, round_number, name, description, max_score, status
 
 -- ─── Participants ─────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS participants (
-    id           INT           NOT NULL AUTO_INCREMENT,
-    name         VARCHAR(100)  NOT NULL,
-    email        VARCHAR(150)  NOT NULL,
-    phone        VARCHAR(25),
-    city         VARCHAR(100),
-    dob          DATE,
-    team_name    VARCHAR(100),
-    qr_token     CHAR(32)      NOT NULL,
-    qr_image     VARCHAR(255),
-    status       ENUM('active','eliminated','winner') NOT NULL DEFAULT 'active',
-    registered_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id            INT           NOT NULL AUTO_INCREMENT,
+    name          VARCHAR(100)  NOT NULL,
+    email         VARCHAR(150)  NOT NULL,
+    phone         VARCHAR(25)   NOT NULL,
+    city          VARCHAR(100),
+    dob           DATE,
+    team_name     VARCHAR(100),
+    access_code   CHAR(6)       NOT NULL,
+    status        ENUM('active','eliminated','winner') NOT NULL DEFAULT 'active',
+    registered_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_participants_email    (email),
-    UNIQUE KEY uq_participants_qr_token (qr_token)
+    UNIQUE KEY uq_participants_email       (email),
+    UNIQUE KEY uq_participants_access_code (access_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ─── Participant Round Participation ──────────────────────────────────────────

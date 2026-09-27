@@ -39,7 +39,7 @@ function adminNav(string $active = ''): void {
         'participants' => ['Participants',   'bi-people-fill',    '/admin/participants.php'],
         'rounds'       => ['Rounds',         'bi-trophy-fill',    '/admin/rounds.php'],
         'scores'       => ['Scores',         'bi-123',            '/admin/scores.php'],
-        'scanner'      => ['QR Scanner',     'bi-qr-code-scan',   '/admin/scanner.php'],
+        'scanner'      => ['Check-in',        'bi-person-check-fill', '/admin/scanner.php'],
         'reports'      => ['Reports',        'bi-bar-chart-fill', '/admin/reports.php'],
     ];
     $initials = strtoupper(substr($admin['name'], 0, 1));

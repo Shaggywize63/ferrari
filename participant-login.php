@@ -2,34 +2,21 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/layout.php';
 
-// Token from URL (QR scan)
-$token = trim($_GET['token'] ?? '');
-if ($token) {
-    $stmt = db()->prepare('SELECT id, name, qr_token FROM participants WHERE qr_token = ?');
-    $stmt->execute([$token]);
-    $p = $stmt->fetch();
-    if ($p) {
-        $_SESSION['participant_id']    = $p['id'];
-        $_SESSION['participant_token'] = $token;
-        redirect(APP_URL . '/participant.php?token=' . $token);
-    }
-    $error = 'Invalid QR code. Please try scanning again.';
-}
+$error = null;
 
-// Manual email lookup
-$error = $error ?? null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    if ($email) {
-        $stmt = db()->prepare('SELECT id, qr_token FROM participants WHERE email = ?');
-        $stmt->execute([$email]);
+    $input = trim($_POST['input'] ?? '');
+    if ($input) {
+        $pdo  = db();
+        $stmt = $pdo->prepare('SELECT id, access_code FROM participants WHERE access_code = ? OR phone = ? OR email = ? LIMIT 1');
+        $stmt->execute([strtoupper($input), $input, $input]);
         $p = $stmt->fetch();
         if ($p) {
-            $_SESSION['participant_id']    = $p['id'];
-            $_SESSION['participant_token'] = $p['qr_token'];
-            redirect(APP_URL . '/participant.php?token=' . $p['qr_token']);
+            $_SESSION['participant_id']   = $p['id'];
+            $_SESSION['participant_code'] = $p['access_code'];
+            redirect(APP_URL . '/participant.php?code=' . $p['access_code']);
         }
-        $error = 'No participant found with this email. Please register first.';
+        $error = 'No participant found. Please check your access code or mobile number and try again.';
     }
 }
 
@@ -44,33 +31,28 @@ pageHead('Participant Login');
 <div class="reg-container">
   <div class="reg-card shadow-dark">
     <div class="reg-card-header">
-      <div style="font-size:2.5rem">📱</div>
+      <div style="font-size:2.5rem">🏁</div>
       <h1 class="h4 fw-800 mb-1 mt-2" style="color:#fff">Participant Login</h1>
-      <p class="mb-0" style="color:rgba(255,255,255,.7);font-size:.9rem">Scan your QR code or enter your email</p>
+      <p class="mb-0" style="color:rgba(255,255,255,.7);font-size:.9rem">Enter your access code or mobile number</p>
     </div>
     <div class="reg-card-body">
       <?php if ($error): ?>
       <div class="alert-ferrari mb-3"><?= sanitize($error) ?></div>
       <?php endif; ?>
 
-      <div class="text-center mb-4" style="padding:1.5rem;background:rgba(220,0,0,.05);border:1px dashed rgba(220,0,0,.3);border-radius:12px">
-        <i class="bi bi-qr-code-scan" style="font-size:3rem;color:var(--ferrari-red)"></i>
-        <div class="mt-2" style="color:var(--text-muted);font-size:.9rem">
-          Ask the pit crew to scan your QR code at each stage
-        </div>
-      </div>
-
-      <div class="d-flex align-items-center gap-3 mb-4">
-        <hr class="flex-grow-1 divider"> <span style="color:var(--text-muted);font-size:.8rem">OR</span> <hr class="flex-grow-1 divider">
-      </div>
-
       <form method="POST">
-        <div class="mb-3">
-          <label class="form-label">Look up by Email</label>
-          <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+        <div class="mb-4">
+          <label class="form-label">Access Code or Mobile Number</label>
+          <input type="text" name="input" class="form-control form-control-lg text-center"
+                 placeholder="e.g. A3X7Q2 or +91 99999 99999"
+                 style="letter-spacing:.12em;font-size:1.1rem;font-weight:600"
+                 autocomplete="off" autofocus required>
+          <div class="mt-2" style="color:var(--text-muted);font-size:.8rem;text-align:center">
+            Your 6-character access code was shown after registration
+          </div>
         </div>
         <button type="submit" class="btn btn-ferrari w-100 py-3">
-          <i class="bi bi-search me-2"></i>Find My Profile
+          <i class="bi bi-box-arrow-in-right me-2"></i>Login
         </button>
       </form>
 

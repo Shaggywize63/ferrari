@@ -13,34 +13,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dob       = trim($_POST['dob']       ?? '');
     $team_name = trim($_POST['team_name'] ?? '');
 
-    if (!$name)                           $errors[] = 'Full name is required.';
-    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
+    if (!$name)                                                      $errors[] = 'Full name is required.';
+    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL))       $errors[] = 'Valid email address is required.';
+    if (!$phone)                                                     $errors[] = 'Mobile number is required.';
 
     if (!$errors) {
         try {
             $pdo = db();
 
-            // Check duplicate
             $chk = $pdo->prepare('SELECT id FROM participants WHERE email = ?');
             $chk->execute([$email]);
             if ($chk->fetch()) {
                 $errors[] = 'This email is already registered. <a href="' . APP_URL . '/participant-login.php" class="alert-link">Login instead →</a>';
             } else {
-                $token = generateToken(32);
+                // Generate unique access code
+                do {
+                    $code = generateAccessCode();
+                    $dup  = $pdo->prepare('SELECT id FROM participants WHERE access_code = ?');
+                    $dup->execute([$code]);
+                } while ($dup->fetch());
 
                 $stmt = $pdo->prepare('
-                    INSERT INTO participants (name, email, phone, city, dob, team_name, qr_token)
+                    INSERT INTO participants (name, email, phone, city, dob, team_name, access_code)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 ');
-                $stmt->execute([$name, $email, $phone, $city, $dob ?: null, $team_name, $token]);
+                $stmt->execute([$name, $email, $phone, $city, $dob ?: null, $team_name, $code]);
                 $participantId = (int)$pdo->lastInsertId();
-
-                // Generate QR image
-                $qrUrl = generateQrCode($token);
-
-                // Update record with image path
-                $pdo->prepare('UPDATE participants SET qr_image = ? WHERE id = ?')
-                    ->execute([$qrUrl, $participantId]);
 
                 // Auto-enroll in active round
                 $activeRound = $pdo->query(
@@ -53,12 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ->execute([$participantId, $activeRound['id']]);
                 }
 
-                // Log
-                $pdo->prepare('INSERT INTO qr_scan_logs (participant_id, scan_type, ip_address, user_agent) VALUES (?,?,?,?)')
-                    ->execute([$participantId, 'registration', $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']);
-
-                flash('success', 'Registration successful!');
-                redirect(APP_URL . '/participant.php?token=' . $token);
+                flash('success', 'Registration successful! Your access code is ' . $code);
+                redirect(APP_URL . '/participant.php?code=' . $code);
             }
         } catch (PDOException $e) {
             $errors[] = 'Database error. Please try again.';
@@ -99,9 +93,9 @@ pageHead('Register');
         </div>
         <div class="row g-3 mb-3">
           <div class="col-6">
-            <label class="form-label">Phone</label>
+            <label class="form-label">Mobile Number *</label>
             <input type="tel" name="phone" class="form-control" placeholder="+91 9999999999"
-                   value="<?= sanitize($_POST['phone'] ?? '') ?>">
+                   value="<?= sanitize($_POST['phone'] ?? '') ?>" required>
           </div>
           <div class="col-6">
             <label class="form-label">City</label>
@@ -122,13 +116,13 @@ pageHead('Register');
           </div>
         </div>
         <button type="submit" class="btn btn-ferrari w-100 py-3 mt-2">
-          <i class="bi bi-flag-fill me-2"></i>Register & Get My QR Code
+          <i class="bi bi-flag-fill me-2"></i>Register & Get My Access Code
         </button>
       </form>
 
       <p class="text-center mt-3 mb-0" style="color:var(--text-muted);font-size:.85rem">
         Already registered?
-        <a href="<?= APP_URL ?>/participant-login.php" style="color:var(--ferrari-red)">Login with QR →</a>
+        <a href="<?= APP_URL ?>/participant-login.php" style="color:var(--ferrari-red)">Login →</a>
       </p>
     </div>
   </div>
