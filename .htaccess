@@ -1,0 +1,27 @@
+Options -Indexes
+DirectoryIndex index.html index.php
+
+# Protect sensitive directories
+<FilesMatch "composer\.(json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Block direct access to vendor and includes
+    RewriteRule ^vendor/.*$   - [F,L]
+    RewriteRule ^includes/.*$ - [F,L]
+    RewriteRule ^config/.*$   - [F,L]
+    RewriteRule ^sql/.*$      - [F,L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
