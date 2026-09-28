@@ -1,9 +1,6 @@
 -- Ferrari Pit Lane Competition – Database Schema
 -- Compatible with MySQL 5.7+ / MariaDB 10.3+
 
-CREATE DATABASE IF NOT EXISTS ferrari_competition CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ferrari_competition;
-
 -- ─── Admins ───────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS admins (
     id            INT            NOT NULL AUTO_INCREMENT,
