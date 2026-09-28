@@ -13,9 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$username]);
     $admin = $stmt->fetch();
 
-    if ($admin && password_verify($password, $admin['password_hash'])) {
+    if ($admin && adminPasswordOk($password, $admin['password_hash'])) {
+        session_regenerate_id(true);
         $_SESSION['admin_id']   = $admin['id'];
         $_SESSION['admin_role'] = $admin['role'];
+        if ($password === DEFAULT_ADMIN_PASSWORD) {
+            $_SESSION['must_change_password'] = true;
+            redirect(APP_URL . '/admin/account.php');
+        }
         redirect(APP_URL . '/admin/index.php');
     }
     $error = 'Invalid username or password.';

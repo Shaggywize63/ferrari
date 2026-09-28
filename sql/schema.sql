@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS admins (
     UNIQUE KEY uq_admins_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Default admin: admin / Admin@123
+-- Default admin: admin / Admin@123 (the portal makes you change it at first login)
 INSERT INTO admins (username, password_hash, name, email, role) VALUES
-('admin', '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Super Admin', 'admin@ferrari.example.com', 'super_admin');
+('admin', '$2y$12$k5TPqwrxlXsp3KZdL7U54eBmzMFZipqeeJo0pgz/GkC0Yw7fdZILK', 'Super Admin', 'admin@ferrari.example.com', 'super_admin');
 
 -- ─── Events ───────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS events (
