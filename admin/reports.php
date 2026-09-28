@@ -13,7 +13,6 @@ $summary = [
     'winner'     => (int)$pdo->query("SELECT COUNT(*) FROM participants WHERE status='winner'")->fetchColumn(),
     'scored'     => (int)$pdo->query("SELECT COUNT(*) FROM participant_rounds WHERE status='scored'")->fetchColumn(),
     'check_ins'  => (int)$pdo->query("SELECT COUNT(*) FROM participant_rounds WHERE checked_in_at IS NOT NULL")->fetchColumn(),
-    'scans'      => (int)$pdo->query('SELECT COUNT(*) FROM qr_scan_logs')->fetchColumn(),
 ];
 
 // Registrations per day (last 30 days)
@@ -59,18 +58,33 @@ $funnelData = $pdo->query("
     GROUP BY r.id ORDER BY r.round_number
 ")->fetchAll();
 
-// Export CSV handler
-if (isset($_GET['export']) && $_GET['export'] === 'participants') {
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="participants-' . date('Y-m-d') . '.csv"');
-    $out = fopen('php://output', 'w');
-    fputcsv($out, ['ID','Name','Email','Phone','City','Team','Status','Total Score','Rounds Played','Registered At']);
-    $all = $pdo->query('SELECT l.*, p.phone, p.registered_at FROM v_leaderboard l JOIN participants p ON p.id=l.id')->fetchAll();
-    foreach ($all as $row) {
-        fputcsv($out, [$row['id'],$row['name'],$row['email'],$row['phone'],$row['city'],$row['team_name'],$row['status'],round($row['total_score'],1),$row['rounds_participated'],$row['registered_at']]);
+// Export CSV handlers
+if (isset($_GET['export'])) {
+    $export = $_GET['export'];
+    if ($export === 'participants') {
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="participants-' . date('Y-m-d') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['ID','Name','Email','Phone','City','Team','Status','Total Score','Rounds Played','Registered At']);
+        $all = $pdo->query('SELECT l.*, p.phone, p.registered_at FROM v_leaderboard l JOIN participants p ON p.id=l.id')->fetchAll();
+        foreach ($all as $row) {
+            fputcsv($out, [$row['id'],$row['name'],$row['email'],$row['phone'],$row['city'],$row['team_name'],$row['status'],round($row['total_score'],1),$row['rounds_participated'],$row['registered_at']]);
+        }
+        fclose($out);
+        exit;
     }
-    fclose($out);
-    exit;
+    if ($export === 'scores') {
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="round-scores-' . date('Y-m-d') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Round #','Round','Participant','City','Team','Score','Status','Checked In','Round Rank']);
+        $rows = $pdo->query('SELECT * FROM v_round_leaderboard ORDER BY round_number, round_rank')->fetchAll();
+        foreach ($rows as $r) {
+            fputcsv($out, [$r['round_number'],$r['round_name'],$r['participant_name'],$r['city'],$r['team_name'],round($r['score'],1),$r['round_status'],$r['checked_in_at'],$r['round_rank']]);
+        }
+        fclose($out);
+        exit;
+    }
 }
 
 pageHead('Reports', true);
@@ -83,7 +97,10 @@ pageHead('Reports', true);
     <span class="page-title">Reports &amp; Analytics</span>
     <div class="ms-auto d-flex gap-2">
       <a href="?export=participants" class="btn btn-outline-ferrari btn-sm">
-        <i class="bi bi-download me-1"></i>Export CSV
+        <i class="bi bi-download me-1"></i>Participants CSV
+      </a>
+      <a href="?export=scores" class="btn btn-outline-ferrari btn-sm">
+        <i class="bi bi-download me-1"></i>Round Scores CSV
       </a>
     </div>
   </div>
@@ -98,8 +115,7 @@ pageHead('Reports', true);
         ['Eliminated',       $summary['eliminated'], 'bi-person-x-fill',     'red'],
         ['Winners',          $summary['winner'],     'bi-trophy-fill',       'gold'],
         ['Scores Entered',   $summary['scored'],     'bi-123',               'blue'],
-        ['Total Check-ins',  $summary['check_ins'],  'bi-qr-code-scan',      'blue'],
-        ['QR Scans Logged',  $summary['scans'],      'bi-camera',            'gold'],
+        ['Total Check-ins',  $summary['check_ins'],  'bi-person-check-fill', 'gold'],
       ];
       foreach ($statItems as [$label, $val, $icon, $color]): ?>
       <div class="col-6 col-md-3">
@@ -176,7 +192,7 @@ pageHead('Reports', true);
               <td><span class="score-pill"><?= round($rs['max_score_val'],1) ?></span></td>
               <td>
                 <?php $pct = $rs['participants'] > 0 ? round($rs['scored_count']/$rs['participants']*100) : 0; ?>
-                <div style="width:100%;background:rgba(255,255,255,.1);border-radius:4px;height:6px">
+                <div style="width:100%;background:rgba(13,27,62,.1);border-radius:4px;height:6px">
                   <div style="width:<?= $pct ?>%;background:var(--ferrari-red);height:6px;border-radius:4px"></div>
                 </div>
                 <small style="color:var(--text-muted)"><?= $pct ?>%</small>
@@ -226,7 +242,7 @@ const palette = {
   blue:   '#0096D6',
   green:  '#28a745',
   silver: '#B0B0B0',
-  gridLine: 'rgba(255,255,255,.06)',
+  gridLine: 'rgba(13,27,62,.09)',
 };
 
 // Registration trend

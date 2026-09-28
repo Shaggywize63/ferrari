@@ -11,12 +11,11 @@ $stats = [
     'active_participants'=> (int)$pdo->query("SELECT COUNT(*) FROM participants WHERE status='active'")->fetchColumn(),
     'total_rounds'       => (int)$pdo->query('SELECT COUNT(*) FROM rounds')->fetchColumn(),
     'active_rounds'      => (int)$pdo->query("SELECT COUNT(*) FROM rounds WHERE status='active'")->fetchColumn(),
-    'total_check_ins'    => (int)$pdo->query("SELECT COUNT(*) FROM participant_rounds WHERE checked_in_at IS NOT NULL")->fetchColumn(),
     'scores_entered'     => (int)$pdo->query("SELECT COUNT(*) FROM participant_rounds WHERE status='scored'")->fetchColumn(),
 ];
 
 // Recent registrations
-$recent = $pdo->query('SELECT name, email, city, qr_token, registered_at FROM participants ORDER BY registered_at DESC LIMIT 10')->fetchAll();
+$recent = $pdo->query('SELECT name, email, city, access_code, registered_at FROM participants ORDER BY registered_at DESC LIMIT 10')->fetchAll();
 
 // Registrations by day (last 7 days)
 $regByDay = $pdo->query("
@@ -83,9 +82,9 @@ pageHead('Dashboard', true);
       </div>
       <div class="col-6 col-xl-3">
         <div class="stat-card blue">
-          <div class="stat-icon"><i class="bi bi-qr-code-scan"></i></div>
-          <div class="stat-value"><?= $stats['total_check_ins'] ?></div>
-          <div class="stat-label">Check-ins Done</div>
+          <div class="stat-icon"><i class="bi bi-123"></i></div>
+          <div class="stat-value"><?= $stats['scores_entered'] ?></div>
+          <div class="stat-label">Scores Entered</div>
         </div>
       </div>
     </div>
@@ -122,23 +121,26 @@ pageHead('Dashboard', true);
     <div class="card">
       <div class="card-header px-4 py-3 d-flex align-items-center justify-content-between">
         <span><i class="bi bi-clock-history me-2 text-ferrari"></i>Recent Registrations</span>
-        <a href="<?= APP_URL ?>/admin/participants.php" class="btn btn-outline-ferrari btn-sm">View All</a>
+        <a href="<?= APP_URL ?>/admin/reports.php" class="btn btn-outline-ferrari btn-sm">View Reports</a>
       </div>
       <div class="table-responsive">
         <table class="table table-dark-custom mb-0">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>City</th><th>QR Token</th><th>Registered</th></tr>
+            <tr><th>Name</th><th>Email</th><th>City</th><th>Access Code</th><th>Registered</th></tr>
           </thead>
           <tbody>
+            <?php if (!$recent): ?>
+            <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No registrations yet.</td></tr>
+            <?php endif; ?>
             <?php foreach ($recent as $r): ?>
             <tr>
               <td class="fw-600"><?= sanitize($r['name']) ?></td>
               <td style="color:var(--text-muted)"><?= sanitize($r['email']) ?></td>
               <td style="color:var(--text-muted)"><?= sanitize($r['city'] ?: '–') ?></td>
               <td>
-                <code style="font-size:.75rem;color:var(--ferrari-red)"><?= strtoupper(substr($r['qr_token'],0,8)) ?>…</code>
+                <code style="font-size:.8rem;color:var(--ferrari-red);letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code>
                 <button class="btn btn-sm p-0 ms-1" style="color:var(--text-muted)"
-                        data-copy="<?= sanitize($r['qr_token']) ?>" title="Copy token">
+                        data-copy="<?= sanitize($r['access_code']) ?>" title="Copy access code">
                   <i class="bi bi-copy" style="font-size:.8rem"></i>
                 </button>
               </td>
@@ -184,8 +186,8 @@ new Chart(document.getElementById('regChart'), {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#888' } },
-      y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#888', precision: 0 }, beginAtZero: true },
+      x: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' } },
+      y: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888', precision: 0 }, beginAtZero: true },
     }
   }
 });
@@ -203,8 +205,8 @@ new Chart(document.getElementById('scoreChart'), {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { labels: { color: '#888', font: {size:11} } } },
     scales: {
-      x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#888' } },
-      y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#888' }, beginAtZero: true },
+      x: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' } },
+      y: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' }, beginAtZero: true },
     }
   }
 });
