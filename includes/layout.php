@@ -10,6 +10,9 @@ function pageHead(string $title, bool $isAdmin = false): void {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- designed light-only: opt out of browser auto-dark and dark-mode extensions -->
+<meta name="color-scheme" content="only light">
+<meta name="darkreader-lock">
 <title>{$title} – A Pit Lane of Ferrari</title>
 <link rel="stylesheet" href="https://use.typekit.net/uef7mgf.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
