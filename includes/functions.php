@@ -99,17 +99,38 @@ function timeAgo(string $datetime): string {
 /**
  * Self-upgrading schema for kiosk data, so shared hosting needs no manual SQL:
  * widens participants.access_code for the kiosk unique code (e.g. ARJ9876)
- * and creates race_scores for the live leaderboard.
+ * and creates race_scores (live leaderboard) and kiosk_records (cross-kiosk login,
+ * journey stage). Each step is independent and never takes the page down: a host
+ * that refuses foreign keys gets the tables without them.
  */
 function ensureKioskSchema(PDO $pdo): void {
     static $done = false;
     if ($done) return;
     $done = true;
-    $col = $pdo->query("SHOW COLUMNS FROM participants LIKE 'access_code'")->fetch();
-    if ($col && stripos($col['Type'], 'char(6)') === 0) {
-        $pdo->exec('ALTER TABLE participants MODIFY access_code VARCHAR(16) NOT NULL');
-    }
-    $pdo->exec("CREATE TABLE IF NOT EXISTS race_scores (
+
+    $step = static function (callable $fn, string $what): void {
+        try {
+            $fn();
+        } catch (Throwable $e) {
+            error_log("ensureKioskSchema ($what): " . $e->getMessage());
+        }
+    };
+    $create = static function (string $ddl, string $fk) use ($pdo): void {
+        try {
+            $pdo->exec(str_replace('{FK}', ",\n        $fk", $ddl));
+        } catch (PDOException $e) {
+            $pdo->exec(str_replace('{FK}', '', $ddl));
+        }
+    };
+
+    $step(function () use ($pdo) {
+        $col = $pdo->query("SHOW COLUMNS FROM participants LIKE 'access_code'")->fetch();
+        if ($col && stripos($col['Type'], 'char(6)') === 0) {
+            $pdo->exec('ALTER TABLE participants MODIFY access_code VARCHAR(16) NOT NULL');
+        }
+    }, 'access_code');
+
+    $step(fn() => $create("CREATE TABLE IF NOT EXISTS race_scores (
         id             INT          NOT NULL AUTO_INCREMENT,
         code           VARCHAR(16)  NOT NULL,
         participant_id INT          NULL,
@@ -119,7 +140,140 @@ function ensureKioskSchema(PDO $pdo): void {
         created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         KEY idx_rs_code (code),
-        KEY idx_rs_created (created_at),
-        CONSTRAINT fk_rs_participant FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE SET NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        KEY idx_rs_created (created_at){FK}
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        'CONSTRAINT fk_rs_participant FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE SET NULL'), 'race_scores');
+
+    // Each driver's kiosk journey record (avatar, car, results) so any station can log them in,
+    // plus per-station flags so the admin can see where every driver is in the journey
+    $step(fn() => $create("CREATE TABLE IF NOT EXISTS kiosk_records (
+        code           VARCHAR(16)  NOT NULL,
+        participant_id INT          NULL,
+        rec            MEDIUMTEXT   NOT NULL,
+        rec_ts         BIGINT       NOT NULL DEFAULT 0,
+        driver_done    TINYINT(1)   NOT NULL DEFAULT 0,
+        car_done       TINYINT(1)   NOT NULL DEFAULT 0,
+        race_done      TINYINT(1)   NOT NULL DEFAULT 0,
+        pit_done       TINYINT(1)   NOT NULL DEFAULT 0,
+        tag            VARCHAR(40)  NULL,
+        race_score     INT          NULL,
+        pit_score      INT          NULL,
+        updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (code){FK}
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        'CONSTRAINT fk_kr_participant FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE'), 'kiosk_records');
+}
+
+/**
+ * Key a kiosk receives with a driver's record, letting it save that record back
+ * even though (unlike the registering kiosk) it never saw the driver's mobile.
+ */
+function kioskSyncKey(string $code): string {
+    return substr(hash_hmac('sha256', 'kiosk-sync|' . $code, SESSION_SECRET . '|' . DB_PASS), 0, 32);
+}
+
+/** Kiosk stations after registration, in journey order: key => label. */
+const JOURNEY_STATIONS = [
+    'driver' => 'Driver Check',
+    'car'    => 'Car Design',
+    'race'   => 'Race',
+    'pit'    => 'Pit Stop',
+];
+
+/** Which stations a kiosk record shows as finished. */
+function journeyFlags(array $rec): array {
+    return [
+        'driver' => !empty($rec['avatar']) || !empty($rec['tag']),
+        'car'    => !empty($rec['car']),
+        'race'   => isset($rec['race']['score']),
+        'pit'    => isset($rec['pit']['score']),
+    ];
+}
+
+/** Where a driver is: ['label' => ..., 'done' => stations finished, 'total' => 4]. */
+function journeyStage(array $flags): array {
+    $done = count(array_filter($flags));
+    if ($done === count(JOURNEY_STATIONS)) {
+        return ['label' => 'Journey complete', 'done' => $done, 'total' => count(JOURNEY_STATIONS)];
+    }
+    foreach (JOURNEY_STATIONS as $k => $label) {
+        if (empty($flags[$k])) {
+            return ['label' => 'Next: ' . $label, 'done' => $done, 'total' => count(JOURNEY_STATIONS)];
+        }
+    }
+    return ['label' => 'Registered', 'done' => $done, 'total' => count(JOURNEY_STATIONS)];
+}
+
+/**
+ * Best race per driver (earliest wins a tie), optionally only races since a unix time.
+ * Plain GROUP BY rather than window functions so it runs on any MySQL/MariaDB.
+ */
+function bestRaceScores(PDO $pdo, int $since = 0, int $limit = 50): array {
+    $w  = $since > 0 ? 'WHERE created_at >= FROM_UNIXTIME(?)' : '';
+    $wr = $since > 0 ? 'WHERE r.created_at >= FROM_UNIXTIME(?)' : '';
+    $st = $pdo->prepare("
+        SELECT r.code, MAX(r.name) AS name, MAX(r.race_num) AS race_num, r.score,
+               MIN(r.created_at) AS first_at, UNIX_TIMESTAMP(MIN(r.created_at)) AS ts
+        FROM race_scores r
+        JOIN (SELECT code, MAX(score) AS best FROM race_scores $w GROUP BY code) b
+          ON b.code = r.code AND b.best = r.score
+        $wr
+        GROUP BY r.code, r.score
+        ORDER BY r.score DESC, first_at ASC
+        LIMIT " . max(1, min($limit, 500)));
+    $st->execute($since > 0 ? [$since, $since] : []);
+    return $st->fetchAll();
+}
+
+/**
+ * Participants joined with their journey progress. Columns added per row:
+ * driver_done, car_done, race_done, pit_done, tag, race_score, pit_score,
+ * last_seen, races, best (NULL where the driver has no kiosk record / races yet).
+ */
+const PARTICIPANT_JOURNEY_SQL = "
+    SELECT p.id, p.name, p.email, p.phone, p.city, p.access_code, p.registered_at,
+           k.driver_done, k.car_done, k.race_done, k.pit_done, k.tag, k.race_score, k.pit_score,
+           k.updated_at AS last_seen, s.races, s.best, s.last_race
+    FROM participants p
+    LEFT JOIN kiosk_records k ON k.code = p.access_code
+    LEFT JOIN (SELECT code, COUNT(*) AS races, MAX(score) AS best, MAX(created_at) AS last_race
+               FROM race_scores GROUP BY code) s ON s.code = p.access_code";
+
+/** Station flags for a PARTICIPANT_JOURNEY_SQL row (a logged race counts even without a kiosk record). */
+function participantFlags(array $row): array {
+    return [
+        'driver' => !empty($row['driver_done']),
+        'car'    => !empty($row['car_done']),
+        'race'   => !empty($row['race_done']) || !empty($row['races']),
+        'pit'    => !empty($row['pit_done']),
+    ];
+}
+
+/** Drivers who have finished each station: ['registered' => n, 'driver' => n, ..., 'complete' => n]. */
+function journeyCounts(PDO $pdo): array {
+    $r = $pdo->query("
+        SELECT COUNT(*) AS registered,
+               COALESCE(SUM(k.driver_done), 0) AS driver,
+               COALESCE(SUM(k.car_done), 0) AS car,
+               COALESCE(SUM(CASE WHEN k.race_done = 1 OR s.code IS NOT NULL THEN 1 ELSE 0 END), 0) AS race,
+               COALESCE(SUM(k.pit_done), 0) AS pit,
+               COALESCE(SUM(CASE WHEN k.driver_done = 1 AND k.car_done = 1 AND k.pit_done = 1
+                                  AND (k.race_done = 1 OR s.code IS NOT NULL) THEN 1 ELSE 0 END), 0) AS complete
+        FROM participants p
+        LEFT JOIN kiosk_records k ON k.code = p.access_code
+        LEFT JOIN (SELECT DISTINCT code FROM race_scores) s ON s.code = p.access_code
+    ")->fetch();
+    return array_map('intval', $r);
+}
+
+/** Small coloured badge for a driver's journey stage. */
+function stageBadge(array $flags): string {
+    $st  = journeyStage($flags);
+    $clr = $st['done'] === $st['total'] ? '#1E8E3E' : ($st['done'] === 0 ? '#5B6B7F' : '#0096D6');
+    $pct = (int)round($st['done'] / $st['total'] * 100);
+    return '<div style="min-width:140px"><span style="font-size:.8rem;font-weight:600;color:' . $clr . '">'
+         . htmlspecialchars($st['label'], ENT_QUOTES, 'UTF-8') . '</span>'
+         . '<div style="height:5px;background:rgba(13,27,62,.1);border-radius:3px;margin-top:4px">'
+         . '<div style="height:5px;width:' . $pct . '%;background:' . $clr . ';border-radius:3px"></div></div>'
+         . '<small style="color:var(--text-muted)">' . $st['done'] . ' / ' . $st['total'] . ' stations</small></div>';
 }

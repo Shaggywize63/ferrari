@@ -16,19 +16,13 @@ $stats = [
 ];
 
 // Recent registrations
-$recent = $pdo->query('SELECT name, email, city, access_code, registered_at FROM participants ORDER BY registered_at DESC LIMIT 10')->fetchAll();
+$recent = $pdo->query(PARTICIPANT_JOURNEY_SQL . ' ORDER BY p.registered_at DESC, p.id DESC LIMIT 10')->fetchAll();
+
+// Journey progress: drivers who have finished each station
+$journey = journeyCounts($pdo);
 
 // Best race score per driver
-$topRacers = $pdo->query("
-    SELECT code, name, score, created_at FROM (
-        SELECT code, name, score, created_at,
-               ROW_NUMBER() OVER (PARTITION BY code ORDER BY score DESC, created_at ASC) AS rn
-        FROM race_scores
-    ) best
-    WHERE rn = 1
-    ORDER BY score DESC, created_at ASC
-    LIMIT 10
-")->fetchAll();
+$topRacers = bestRaceScores($pdo, 0, 10);
 
 // Registrations and races by day (last 7 days, zero-filled)
 $days = [];
@@ -126,6 +120,32 @@ pageHead('Dashboard', true);
       </div>
     </div>
 
+    <!-- Journey progress -->
+    <div class="card mb-4">
+      <div class="card-header px-4 py-3 d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-signpost-split me-2 text-ferrari"></i>Journey Progress</span>
+        <a href="<?= APP_URL ?>/admin/participants.php" class="btn btn-outline-ferrari btn-sm">All Participants</a>
+      </div>
+      <div class="card-body">
+        <?php
+        $steps = ['registered' => 'Registered', 'driver' => 'Driver Check', 'car' => 'Car Design',
+                  'race' => 'Race', 'pit' => 'Pit Stop', 'complete' => 'Journey Complete'];
+        $base  = max(1, $journey['registered']);
+        foreach ($steps as $k => $label):
+          $n = $journey[$k]; $pct = (int)round($n / $base * 100);
+          $link = $k === 'registered' ? '' : '?stage=' . $k;
+        ?>
+        <a href="<?= APP_URL ?>/admin/participants.php<?= $link ?>" class="d-flex align-items-center gap-3 mb-2 text-decoration-none" style="color:inherit">
+          <span style="width:140px;font-size:.85rem" class="fw-600"><?= $label ?></span>
+          <div style="flex:1;height:12px;background:rgba(13,27,62,.08);border-radius:6px">
+            <div style="height:12px;width:<?= $pct ?>%;background:<?= $k === 'complete' ? '#1E8E3E' : ($k === 'registered' ? '#DC0000' : '#0096D6') ?>;border-radius:6px"></div>
+          </div>
+          <span style="width:90px;text-align:right;font-size:.85rem"><b><?= number_format($n) ?></b> <span style="color:var(--text-muted)"><?= $pct ?>%</span></span>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
     <div class="row g-3">
     <!-- Top Race Scores -->
     <div class="col-lg-5">
@@ -162,12 +182,12 @@ pageHead('Dashboard', true);
     <div class="card h-100">
       <div class="card-header px-4 py-3 d-flex align-items-center justify-content-between">
         <span><i class="bi bi-clock-history me-2 text-ferrari"></i>Recent Registrations</span>
-        <a href="<?= APP_URL ?>/admin/reports.php" class="btn btn-outline-ferrari btn-sm">View Reports</a>
+        <a href="<?= APP_URL ?>/admin/participants.php" class="btn btn-outline-ferrari btn-sm">All Participants</a>
       </div>
       <div class="table-responsive">
         <table class="table table-dark-custom mb-0">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>City</th><th>Unique ID</th><th>Registered</th></tr>
+            <tr><th>Name</th><th>Email</th><th>Unique ID</th><th>Stage</th><th>Registered</th></tr>
           </thead>
           <tbody>
             <?php if (!$recent): ?>
@@ -177,7 +197,6 @@ pageHead('Dashboard', true);
             <tr>
               <td class="fw-600"><?= sanitize($r['name']) ?></td>
               <td style="color:var(--text-muted)"><?= sanitize($r['email']) ?></td>
-              <td style="color:var(--text-muted)"><?= sanitize($r['city'] ?: '–') ?></td>
               <td>
                 <code style="font-size:.8rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code>
                 <button class="btn btn-sm p-0 ms-1" style="color:var(--text-muted)"
@@ -185,6 +204,7 @@ pageHead('Dashboard', true);
                   <i class="bi bi-copy" style="font-size:.8rem"></i>
                 </button>
               </td>
+              <td><?= stageBadge(participantFlags($r)) ?></td>
               <td style="color:var(--text-muted);font-size:.85rem"><?= timeAgo($r['registered_at']) ?></td>
             </tr>
             <?php endforeach; ?>
