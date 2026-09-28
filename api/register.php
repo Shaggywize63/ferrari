@@ -48,6 +48,16 @@ if (str_starts_with($phone, '91') && strlen($phone) === 12) {
 }
 
 $pdo = db();
+ensureKioskSchema($pdo);
+
+// The kiosk's unique code (first 3 letters of name + first 4 digits of mobile, e.g. ARJ9876)
+$want = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $fp26));
+if (strlen($want) < 3 || strlen($want) > 16) $want = '';
+$codeFree = function (string $c, int $exceptId = 0) use ($pdo): bool {
+    $q = $pdo->prepare('SELECT id FROM participants WHERE access_code = ? AND id <> ? LIMIT 1');
+    $q->execute([$c, $exceptId]);
+    return !$q->fetch();
+};
 
 // If already registered (by email or phone) return their existing code
 $existing = null;
@@ -63,6 +73,11 @@ if (!$existing && $phone) {
 }
 
 if ($existing) {
+    // keep the database code in step with the code the kiosk shows the driver
+    if ($want !== '' && $existing['access_code'] !== $want && $codeFree($want, (int)$existing['id'])) {
+        $pdo->prepare('UPDATE participants SET access_code = ? WHERE id = ?')->execute([$want, $existing['id']]);
+        $existing['access_code'] = $want;
+    }
     out(true, 'Already registered.', [
         'access_code'    => $existing['access_code'],
         'participant_id' => $existing['id'],
@@ -70,9 +85,11 @@ if ($existing) {
     ]);
 }
 
-// Generate unique access code
+// Use the kiosk's code; fall back to a random one only if it is already taken
 $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-do {
+if ($want !== '' && $codeFree($want)) {
+    $code = $want;
+} else do {
     $code = '';
     for ($i = 0; $i < 6; $i++) {
         $code .= $chars[random_int(0, strlen($chars) - 1)];
