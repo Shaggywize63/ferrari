@@ -169,10 +169,7 @@ pageHead('Participants', true);
             <tr>
               <td>
                 <div class="fw-600"><?= sanitize($r['name']) ?></div>
-                <code style="font-size:.8rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code>
-                <button class="btn btn-sm p-0 ms-1" style="color:var(--text-muted)" data-copy="<?= sanitize($r['access_code']) ?>" title="Copy unique ID">
-                  <i class="bi bi-copy" style="font-size:.75rem"></i>
-                </button>
+                <span class="id-cell"><code style="font-size:.8rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code><button class="btn btn-sm p-0 ms-1" style="color:var(--text-muted)" data-copy="<?= sanitize($r['access_code']) ?>" title="Copy unique ID"><i class="bi bi-copy" style="font-size:.75rem"></i></button></span>
               </td>
               <td style="font-size:.85rem">
                 <div><?= sanitize($r['phone'] ?: '–') ?></div>

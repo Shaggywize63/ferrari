@@ -53,8 +53,8 @@ pageHead('Dashboard', true);
       <a href="<?= APP_URL ?>/leaderboard.html" target="_blank" class="btn btn-outline-ferrari btn-sm">
         <i class="bi bi-trophy me-1"></i>Leaderboard
       </a>
-      <a href="<?= APP_URL ?>/register.php" target="_blank" class="btn btn-ferrari btn-sm">
-        <i class="bi bi-person-plus me-1"></i>Register
+      <a href="<?= APP_URL ?>/" target="_blank" class="btn btn-ferrari btn-sm">
+        <i class="bi bi-display me-1"></i>Kiosk App
       </a>
     </div>
   </div>
@@ -136,9 +136,9 @@ pageHead('Dashboard', true);
           $link = $k === 'registered' ? '' : '?stage=' . $k;
         ?>
         <a href="<?= APP_URL ?>/admin/participants.php<?= $link ?>" class="d-flex align-items-center gap-3 mb-2 text-decoration-none" style="color:inherit">
-          <span style="width:140px;font-size:.85rem" class="fw-600"><?= $label ?></span>
-          <div style="flex:1;height:12px;background:rgba(13,27,62,.08);border-radius:6px">
-            <div style="height:12px;width:<?= $pct ?>%;background:<?= $k === 'complete' ? '#1E8E3E' : ($k === 'registered' ? '#DC0000' : '#0096D6') ?>;border-radius:6px"></div>
+          <span class="eyebrow" style="width:170px;color:#0D1B3E"><?= $label ?></span>
+          <div style="flex:1;height:10px;background:#EEF4FB">
+            <div style="height:12px;width:<?= $pct ?>%;background:<?= $k === 'complete' ? '#1E8E3E' : ($k === 'registered' ? '#D40000' : '#1140D8') ?>"></div>
           </div>
           <span style="width:90px;text-align:right;font-size:.85rem"><b><?= number_format($n) ?></b> <span style="color:var(--text-muted)"><?= $pct ?>%</span></span>
         </a>
@@ -187,17 +187,16 @@ pageHead('Dashboard', true);
       <div class="table-responsive">
         <table class="table table-dark-custom mb-0">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Unique ID</th><th>Stage</th><th>Registered</th></tr>
+            <tr><th>Name</th><th>Unique ID</th><th>Stage</th><th>Registered</th></tr>
           </thead>
           <tbody>
             <?php if (!$recent): ?>
-            <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No registrations yet.</td></tr>
+            <tr><td colspan="4" class="text-center py-4" style="color:var(--text-muted)">No registrations yet.</td></tr>
             <?php endif; ?>
             <?php foreach ($recent as $r): ?>
             <tr>
               <td class="fw-600"><?= sanitize($r['name']) ?></td>
-              <td style="color:var(--text-muted)"><?= sanitize($r['email']) ?></td>
-              <td>
+              <td class="id-cell">
                 <code style="font-size:.8rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code>
                 <button class="btn btn-sm p-0 ms-1" style="color:var(--text-muted)"
                         data-copy="<?= sanitize($r['access_code']) ?>" title="Copy unique ID">
@@ -205,7 +204,7 @@ pageHead('Dashboard', true);
                 </button>
               </td>
               <td><?= stageBadge(participantFlags($r)) ?></td>
-              <td style="color:var(--text-muted);font-size:.85rem"><?= timeAgo($r['registered_at']) ?></td>
+              <td style="color:var(--text-muted);font-size:.85rem;white-space:nowrap"><?= timeAgo($r['registered_at']) ?></td>
             </tr>
             <?php endforeach; ?>
           </tbody>
@@ -225,15 +224,15 @@ const dayLabels = <?= json_encode($dayLabels) ?>;
 const regData   = <?= json_encode(array_column(array_values($days), 'reg')) ?>;
 const raceData  = <?= json_encode(array_column(array_values($days), 'races')) ?>;
 
-Chart.defaults.color = '#888';
-Chart.defaults.font.family = 'Inter';
+Chart.defaults.color = '#5B6B7F';
+Chart.defaults.font.family = "'forma-djr-text', system-ui, sans-serif";
 
 const barOpts = {
   responsive: true, maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' } },
-    y: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888', precision: 0 }, beginAtZero: true },
+    x: { grid: { color: '#E3E9F2' }, ticks: { color: '#5B6B7F' } },
+    y: { grid: { color: '#E3E9F2' }, ticks: { color: '#5B6B7F', precision: 0 }, beginAtZero: true },
   }
 };
 
@@ -241,7 +240,7 @@ new Chart(document.getElementById('regChart'), {
   type: 'bar',
   data: { labels: dayLabels, datasets: [{
     label: 'Registrations', data: regData,
-    backgroundColor: 'rgba(220,0,0,.7)', borderColor: '#DC0000', borderWidth: 1, borderRadius: 6,
+    backgroundColor: '#D40000', borderRadius: 0,
   }] },
   options: barOpts
 });
@@ -250,7 +249,7 @@ new Chart(document.getElementById('raceChart'), {
   type: 'bar',
   data: { labels: dayLabels, datasets: [{
     label: 'Races', data: raceData,
-    backgroundColor: 'rgba(0,150,214,.7)', borderColor: '#0096D6', borderWidth: 1, borderRadius: 6,
+    backgroundColor: '#1140D8', borderRadius: 0,
   }] },
   options: barOpts
 });
