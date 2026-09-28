@@ -45,6 +45,21 @@ function requireAdmin(): void {
     if (!isAdminLoggedIn()) {
         redirect(APP_URL . '/admin/login.php');
     }
+    // an admin still on the default password must set their own before anything else
+    if (!empty($_SESSION['must_change_password']) && basename($_SERVER['SCRIPT_NAME'] ?? '') !== 'account.php') {
+        redirect(APP_URL . '/admin/account.php');
+    }
+}
+
+/** Documented default admin password (sql/schema.sql); it only ever works until changed. */
+const DEFAULT_ADMIN_PASSWORD = 'Admin@123';
+/** Hash the original schema seeded for the default admin; it never matched the documented password. */
+const BROKEN_SEED_ADMIN_HASH = '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+
+/** Password check for admin login, accepting the documented default on the broken seeded account. */
+function adminPasswordOk(string $password, string $hash): bool {
+    if (password_verify($password, $hash)) return true;
+    return hash_equals(BROKEN_SEED_ADMIN_HASH, $hash) && hash_equals(DEFAULT_ADMIN_PASSWORD, $password);
 }
 
 function requireParticipant(): void {
