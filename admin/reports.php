@@ -40,23 +40,18 @@ foreach ($pdo->query("SELECT HOUR(created_at) AS h, COUNT(*) AS cnt FROM race_sc
 
 // City distribution
 $byCity = $pdo->query("
-    SELECT COALESCE(NULLIF(city,''),'Unknown') AS city, COUNT(*) AS cnt
-    FROM participants GROUP BY COALESCE(NULLIF(city,''),'Unknown') ORDER BY cnt DESC LIMIT 10
+    SELECT city, COUNT(*) AS cnt
+    FROM (SELECT COALESCE(NULLIF(city,''),'Unknown') AS city FROM participants) c
+    GROUP BY city ORDER BY cnt DESC LIMIT 10
 ")->fetchAll();
 
 // Best race score per driver
-$bestSql = "
-    SELECT b.code, b.name, b.score, b.created_at, p.city, x.races
-    FROM (
-        SELECT code, name, score, created_at,
-               ROW_NUMBER() OVER (PARTITION BY code ORDER BY score DESC, created_at ASC) AS rn
-        FROM race_scores
-    ) b
-    JOIN (SELECT code, COUNT(*) AS races FROM race_scores GROUP BY code) x ON x.code = b.code
-    LEFT JOIN participants p ON p.access_code = b.code
-    WHERE b.rn = 1
-    ORDER BY b.score DESC, b.created_at ASC";
-$top10 = $pdo->query($bestSql . ' LIMIT 10')->fetchAll();
+$raceCounts = $pdo->query('SELECT code, COUNT(*) AS races FROM race_scores GROUP BY code')->fetchAll(PDO::FETCH_KEY_PAIR);
+$cities     = $pdo->query("SELECT access_code, city FROM participants")->fetchAll(PDO::FETCH_KEY_PAIR);
+$top10 = array_map(static fn(array $r) => $r + [
+    'races' => (int)($raceCounts[$r['code']] ?? 0),
+    'city'  => $cities[$r['code']] ?? '',
+], bestRaceScores($pdo, 0, 10));
 
 // Most recent races
 $recentRaces = $pdo->query('SELECT code, name, race_num, score, created_at FROM race_scores ORDER BY created_at DESC, id DESC LIMIT 15')->fetchAll();

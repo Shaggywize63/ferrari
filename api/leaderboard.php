@@ -56,24 +56,13 @@ if (($_GET['board'] ?? '') === 'race') {
     $where = $since > 0 ? 'WHERE created_at >= FROM_UNIXTIME(?)' : '';
     $args  = $since > 0 ? [$since] : [];
 
-    $sql = "SELECT code, name, race_num, score, UNIX_TIMESTAMP(created_at) AS ts
-            FROM (
-                SELECT code, name, race_num, score, created_at,
-                       ROW_NUMBER() OVER (PARTITION BY code ORDER BY score DESC, created_at ASC) AS rn
-                FROM race_scores $where
-            ) best
-            WHERE rn = 1
-            ORDER BY score DESC, ts ASC
-            LIMIT $limit";
-    $st = $pdo->prepare($sql);
-    $st->execute($args);
     $rows = array_map(static fn(array $r) => [
         'id'    => $r['code'],
         'name'  => $r['name'],
         'num'   => $r['race_num'] ?? '',
         'score' => (int)$r['score'],
         'ts'    => (int)$r['ts'] * 1000,
-    ], $st->fetchAll());
+    ], bestRaceScores($pdo, $since, $limit));
 
     $ct = $pdo->prepare("SELECT COUNT(DISTINCT code) FROM race_scores $where");
     $ct->execute($args);

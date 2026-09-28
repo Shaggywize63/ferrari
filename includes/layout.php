@@ -35,8 +35,9 @@ function adminNav(string $active = ''): void {
     $admin = currentAdmin();
     $base  = APP_URL;
     $items = [
-        'dashboard' => ['Dashboard',           'bi-speedometer2',   '/admin/index.php'],
-        'reports'   => ['Reports & Analytics', 'bi-bar-chart-fill', '/admin/reports.php'],
+        'dashboard'    => ['Dashboard',           'bi-speedometer2',   '/admin/index.php'],
+        'participants' => ['Participants',        'bi-people-fill',    '/admin/participants.php'],
+        'reports'      => ['Reports & Analytics', 'bi-bar-chart-fill', '/admin/reports.php'],
     ];
     $initials = strtoupper(substr($admin['name'], 0, 1));
     $links = '';
