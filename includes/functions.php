@@ -95,3 +95,31 @@ function timeAgo(string $datetime): string {
     if ($diff < 86400)  return floor($diff/3600) . 'h ago';
     return floor($diff/86400) . 'd ago';
 }
+
+/**
+ * Self-upgrading schema for kiosk data, so shared hosting needs no manual SQL:
+ * widens participants.access_code for the kiosk unique code (e.g. ARJ9876)
+ * and creates race_scores for the live leaderboard.
+ */
+function ensureKioskSchema(PDO $pdo): void {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+    $col = $pdo->query("SHOW COLUMNS FROM participants LIKE 'access_code'")->fetch();
+    if ($col && stripos($col['Type'], 'char(6)') === 0) {
+        $pdo->exec('ALTER TABLE participants MODIFY access_code VARCHAR(16) NOT NULL');
+    }
+    $pdo->exec("CREATE TABLE IF NOT EXISTS race_scores (
+        id             INT          NOT NULL AUTO_INCREMENT,
+        code           VARCHAR(16)  NOT NULL,
+        participant_id INT          NULL,
+        name           VARCHAR(100) NOT NULL,
+        race_num       VARCHAR(8)   NULL,
+        score          INT          NOT NULL,
+        created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY idx_rs_code (code),
+        KEY idx_rs_created (created_at),
+        CONSTRAINT fk_rs_participant FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}

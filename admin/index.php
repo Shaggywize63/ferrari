@@ -5,36 +5,45 @@ requireAdmin();
 
 $pdo = db();
 
-// Stats
+ensureKioskSchema($pdo);
+
+// Stats — real kiosk data only (registrations + race results)
 $stats = [
     'total_participants' => (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn(),
-    'active_participants'=> (int)$pdo->query("SELECT COUNT(*) FROM participants WHERE status='active'")->fetchColumn(),
-    'total_rounds'       => (int)$pdo->query('SELECT COUNT(*) FROM rounds')->fetchColumn(),
-    'active_rounds'      => (int)$pdo->query("SELECT COUNT(*) FROM rounds WHERE status='active'")->fetchColumn(),
-    'scores_entered'     => (int)$pdo->query("SELECT COUNT(*) FROM participant_rounds WHERE status='scored'")->fetchColumn(),
+    'registered_today'   => (int)$pdo->query('SELECT COUNT(*) FROM participants WHERE registered_at >= CURDATE()')->fetchColumn(),
+    'races'              => (int)$pdo->query('SELECT COUNT(*) FROM race_scores')->fetchColumn(),
+    'top_score'          => (int)$pdo->query('SELECT COALESCE(MAX(score), 0) FROM race_scores')->fetchColumn(),
 ];
 
 // Recent registrations
 $recent = $pdo->query('SELECT name, email, city, access_code, registered_at FROM participants ORDER BY registered_at DESC LIMIT 10')->fetchAll();
 
-// Registrations by day (last 7 days)
-$regByDay = $pdo->query("
-    SELECT DATE(registered_at) AS day, COUNT(*) AS cnt
-    FROM participants
-    WHERE registered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-    GROUP BY DATE(registered_at)
-    ORDER BY day
+// Best race score per driver
+$topRacers = $pdo->query("
+    SELECT code, name, score, created_at FROM (
+        SELECT code, name, score, created_at,
+               ROW_NUMBER() OVER (PARTITION BY code ORDER BY score DESC, created_at ASC) AS rn
+        FROM race_scores
+    ) best
+    WHERE rn = 1
+    ORDER BY score DESC, created_at ASC
+    LIMIT 10
 ")->fetchAll();
 
-// Score distribution by round
-$scoreByRound = $pdo->query("
-    SELECT r.name AS round_name, AVG(pr.score) AS avg_score, MAX(pr.score) AS max_score, COUNT(pr.id) AS participants
-    FROM participant_rounds pr
-    JOIN rounds r ON r.id = pr.round_id
-    WHERE pr.status = 'scored'
-    GROUP BY pr.round_id, r.name
-    ORDER BY r.round_number
-")->fetchAll();
+// Registrations and races by day (last 7 days, zero-filled)
+$days = [];
+for ($i = 6; $i >= 0; $i--) {
+    $days[date('Y-m-d', strtotime("-$i day"))] = ['reg' => 0, 'races' => 0];
+}
+foreach ($pdo->query("SELECT DATE(registered_at) AS day, COUNT(*) AS cnt FROM participants
+                      WHERE registered_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(registered_at)") as $r) {
+    if (isset($days[$r['day']])) $days[$r['day']]['reg'] = (int)$r['cnt'];
+}
+foreach ($pdo->query("SELECT DATE(created_at) AS day, COUNT(*) AS cnt FROM race_scores
+                      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)") as $r) {
+    if (isset($days[$r['day']])) $days[$r['day']]['races'] = (int)$r['cnt'];
+}
+$dayLabels = array_map(static fn($d) => date('D j M', strtotime($d)), array_keys($days));
 
 pageHead('Dashboard', true);
 ?>
@@ -47,7 +56,7 @@ pageHead('Dashboard', true);
     </button>
     <span class="page-title">Dashboard</span>
     <div class="ms-auto d-flex gap-2">
-      <a href="<?= APP_URL ?>/leaderboard.php" target="_blank" class="btn btn-outline-ferrari btn-sm">
+      <a href="<?= APP_URL ?>/leaderboard.html" target="_blank" class="btn btn-outline-ferrari btn-sm">
         <i class="bi bi-trophy me-1"></i>Leaderboard
       </a>
       <a href="<?= APP_URL ?>/register.php" target="_blank" class="btn btn-ferrari btn-sm">
@@ -69,22 +78,22 @@ pageHead('Dashboard', true);
       <div class="col-6 col-xl-3">
         <div class="stat-card green">
           <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
-          <div class="stat-value"><?= $stats['active_participants'] ?></div>
-          <div class="stat-label">Active Participants</div>
+          <div class="stat-value"><?= $stats['registered_today'] ?></div>
+          <div class="stat-label">Registered Today</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card blue">
+          <div class="stat-icon"><i class="bi bi-flag-fill"></i></div>
+          <div class="stat-value"><?= $stats['races'] ?></div>
+          <div class="stat-label">Races Completed</div>
         </div>
       </div>
       <div class="col-6 col-xl-3">
         <div class="stat-card gold">
           <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
-          <div class="stat-value"><?= $stats['total_rounds'] ?></div>
-          <div class="stat-label">Total Rounds</div>
-        </div>
-      </div>
-      <div class="col-6 col-xl-3">
-        <div class="stat-card blue">
-          <div class="stat-icon"><i class="bi bi-123"></i></div>
-          <div class="stat-value"><?= $stats['scores_entered'] ?></div>
-          <div class="stat-label">Scores Entered</div>
+          <div class="stat-value"><?= number_format($stats['top_score']) ?></div>
+          <div class="stat-label">Top Race Score</div>
         </div>
       </div>
     </div>
@@ -106,19 +115,51 @@ pageHead('Dashboard', true);
       <div class="col-md-5">
         <div class="card h-100">
           <div class="card-header px-4 py-3">
-            <i class="bi bi-graph-up-arrow me-2 text-ferrari"></i>Avg Score by Round
+            <i class="bi bi-flag-fill me-2 text-ferrari"></i>Races Completed (Last 7 Days)
           </div>
           <div class="card-body">
             <div class="chart-container" style="height:220px">
-              <canvas id="scoreChart"></canvas>
+              <canvas id="raceChart"></canvas>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <div class="row g-3">
+    <!-- Top Race Scores -->
+    <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header px-4 py-3 d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-trophy me-2 text-ferrari"></i>Top Race Scores</span>
+        <a href="<?= APP_URL ?>/leaderboard.html" target="_blank" class="btn btn-outline-ferrari btn-sm">Live Board</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-dark-custom mb-0">
+          <thead>
+            <tr><th>#</th><th>Driver</th><th>Code</th><th class="text-end">Score</th></tr>
+          </thead>
+          <tbody>
+            <?php if (!$topRacers): ?>
+            <tr><td colspan="4" class="text-center py-4" style="color:var(--text-muted)">No races yet.</td></tr>
+            <?php endif; ?>
+            <?php foreach ($topRacers as $i => $t): ?>
+            <tr>
+              <td class="fw-600"><?= $i + 1 ?></td>
+              <td class="fw-600"><?= sanitize($t['name']) ?></td>
+              <td><code style="font-size:.8rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($t['code']) ?></code></td>
+              <td class="text-end fw-600"><?= number_format((int)$t['score']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+
     <!-- Recent Registrations -->
-    <div class="card">
+    <div class="col-lg-7">
+    <div class="card h-100">
       <div class="card-header px-4 py-3 d-flex align-items-center justify-content-between">
         <span><i class="bi bi-clock-history me-2 text-ferrari"></i>Recent Registrations</span>
         <a href="<?= APP_URL ?>/admin/reports.php" class="btn btn-outline-ferrari btn-sm">View Reports</a>
@@ -126,7 +167,7 @@ pageHead('Dashboard', true);
       <div class="table-responsive">
         <table class="table table-dark-custom mb-0">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>City</th><th>Access Code</th><th>Registered</th></tr>
+            <tr><th>Name</th><th>Email</th><th>City</th><th>Unique ID</th><th>Registered</th></tr>
           </thead>
           <tbody>
             <?php if (!$recent): ?>
@@ -138,9 +179,9 @@ pageHead('Dashboard', true);
               <td style="color:var(--text-muted)"><?= sanitize($r['email']) ?></td>
               <td style="color:var(--text-muted)"><?= sanitize($r['city'] ?: '–') ?></td>
               <td>
-                <code style="font-size:.8rem;color:var(--ferrari-red);letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code>
+                <code style="font-size:.8rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($r['access_code']) ?></code>
                 <button class="btn btn-sm p-0 ms-1" style="color:var(--text-muted)"
-                        data-copy="<?= sanitize($r['access_code']) ?>" title="Copy access code">
+                        data-copy="<?= sanitize($r['access_code']) ?>" title="Copy unique ID">
                   <i class="bi bi-copy" style="font-size:.8rem"></i>
                 </button>
               </td>
@@ -151,64 +192,48 @@ pageHead('Dashboard', true);
         </table>
       </div>
     </div>
+    </div>
+    </div>
   </div>
 </div>
 </div>
 
 <script>
-const regLabels = <?= json_encode(array_column($regByDay, 'day')) ?>;
-const regData   = <?= json_encode(array_map('intval', array_column($regByDay, 'cnt'))) ?>;
-const rndLabels = <?= json_encode(array_column($scoreByRound, 'round_name')) ?>;
-const avgScores = <?= json_encode(array_map('floatval', array_column($scoreByRound, 'avg_score'))) ?>;
-const maxScores = <?= json_encode(array_map('floatval', array_column($scoreByRound, 'max_score'))) ?>;
+// Chart.js is loaded by pageFoot() below, so build the charts once the page has parsed.
+document.addEventListener('DOMContentLoaded', () => {
+const dayLabels = <?= json_encode($dayLabels) ?>;
+const regData   = <?= json_encode(array_column(array_values($days), 'reg')) ?>;
+const raceData  = <?= json_encode(array_column(array_values($days), 'races')) ?>;
 
-const chartDefaults = {
-  color: '#888',
-  font: { family: 'Inter', size: 12 },
-};
 Chart.defaults.color = '#888';
 Chart.defaults.font.family = 'Inter';
 
+const barOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' } },
+    y: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888', precision: 0 }, beginAtZero: true },
+  }
+};
+
 new Chart(document.getElementById('regChart'), {
   type: 'bar',
-  data: {
-    labels: regLabels,
-    datasets: [{
-      label: 'Registrations',
-      data: regData,
-      backgroundColor: 'rgba(220,0,0,.7)',
-      borderColor: '#DC0000',
-      borderWidth: 1,
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' } },
-      y: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888', precision: 0 }, beginAtZero: true },
-    }
-  }
+  data: { labels: dayLabels, datasets: [{
+    label: 'Registrations', data: regData,
+    backgroundColor: 'rgba(220,0,0,.7)', borderColor: '#DC0000', borderWidth: 1, borderRadius: 6,
+  }] },
+  options: barOpts
 });
 
-new Chart(document.getElementById('scoreChart'), {
+new Chart(document.getElementById('raceChart'), {
   type: 'bar',
-  data: {
-    labels: rndLabels,
-    datasets: [
-      { label: 'Avg Score', data: avgScores, backgroundColor: 'rgba(200,168,75,.7)', borderRadius: 6 },
-      { label: 'Max Score', data: maxScores, backgroundColor: 'rgba(220,0,0,.5)', borderRadius: 6 },
-    ]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#888', font: {size:11} } } },
-    scales: {
-      x: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' } },
-      y: { grid: { color: 'rgba(13,27,62,.09)' }, ticks: { color: '#888' }, beginAtZero: true },
-    }
-  }
+  data: { labels: dayLabels, datasets: [{
+    label: 'Races', data: raceData,
+    backgroundColor: 'rgba(0,150,214,.7)', borderColor: '#0096D6', borderWidth: 1, borderRadius: 6,
+  }] },
+  options: barOpts
+});
 });
 </script>
 <?php pageFoot(charts: true); ?>
