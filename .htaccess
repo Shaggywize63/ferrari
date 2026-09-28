@@ -2,6 +2,7 @@ Options -Indexes
 
 # Application environment
 SetEnv APP_URL https://mediumpurple-ape-621681.hostingersite.com
+# DB credentials are set directly on the server via File Manager (not in git)
 DirectoryIndex index.html index.php
 
 # Protect sensitive directories
