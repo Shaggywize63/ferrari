@@ -4,6 +4,7 @@
    letter-spaced uppercase labels and the two blue slashes in the header.
    Loaded after main.css on admin pages only (body.admin-ui).
    ───────────────────────────────────────────────────────────────────────── */
+:root { color-scheme: only light; }
 .admin-ui {
   --navy:      #0D1B3E;
   --red:       #D40000;
