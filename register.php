@@ -40,15 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$name, $email, $phone, $city, $dob ?: null, $team_name, $code]);
                 $participantId = (int)$pdo->lastInsertId();
 
-                // Auto-enroll in active round
-                $activeRound = $pdo->query(
-                    'SELECT r.id FROM rounds r JOIN events e ON e.id=r.event_id
-                     WHERE e.status="active" AND r.status="active"
-                     ORDER BY r.round_number LIMIT 1'
+                // Auto-enroll in active or upcoming round 1
+                $r1 = $pdo->query(
+                    "SELECT id FROM rounds WHERE round_number = 1 AND status IN ('active','upcoming') LIMIT 1"
                 )->fetch();
-                if ($activeRound) {
+                if ($r1) {
                     $pdo->prepare('INSERT IGNORE INTO participant_rounds (participant_id, round_id) VALUES (?, ?)')
-                        ->execute([$participantId, $activeRound['id']]);
+                        ->execute([$participantId, $r1['id']]);
                 }
 
                 flash('success', 'Registration successful! Your access code is ' . $code);
