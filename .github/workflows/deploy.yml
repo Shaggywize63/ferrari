@@ -33,10 +33,12 @@ jobs:
           chmod 600 /tmp/deploy_key
 
           # /.htaccess is excluded: the server copy holds settings added on the server
-          # (e.g. DB credentials via SetEnv) and must never be overwritten or deleted.
+          # (e.g. DB credentials via SetEnv) and must never be overwritten or deleted;
+          # the same goes for /config/local.php (server-only settings, see config/local.example.php).
           # Changes to .htaccess in the repo therefore need to be applied on the server by hand.
           rsync -avz --delete \
             --exclude='/.htaccess' \
+            --exclude='/config/local.php' \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='qrcodes/*.png' \

@@ -277,3 +277,16 @@ function stageBadge(array $flags): string {
          . '<div style="height:5px;width:' . $pct . '%;background:' . $clr . ';border-radius:3px"></div></div>'
          . '<small style="color:var(--text-muted)">' . $st['done'] . ' / ' . $st['total'] . ' stations</small></div>';
 }
+
+/** Plain-language cause for database set-up errors (connection, credentials, missing tables), else null. */
+function dbErrorHint(PDOException $e): ?string {
+    $msg = $e->getMessage();
+    $driver = preg_match('/\[(\d{4})\]/', $msg, $m) ? (int)$m[1] : 0;
+    return match (true) {
+        $driver === 1045 => 'The database rejected the username or password. Check DB_USER and DB_PASS in the server\'s .htaccess (SetEnv lines).',
+        in_array($driver, [1044, 1049], true) => 'The database named in DB_NAME was not found or this user cannot open it. Check DB_NAME in the server\'s .htaccess.',
+        in_array($driver, [2002, 2003, 2005, 2006], true) => 'Could not reach the database server. Check DB_HOST in the server\'s .htaccess.',
+        str_contains($msg, '42S02') => 'A database table is missing, so the database has not been set up yet. Import sql/schema.sql in phpMyAdmin.',
+        default => null,
+    };
+}

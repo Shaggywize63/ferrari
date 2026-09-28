@@ -1,6 +1,9 @@
 <?php
 function pageHead(string $title, bool $isAdmin = false): void {
     $base = APP_URL;
+    // admin pages share the kiosk app's look (assets/css/admin.css)
+    $adminCss  = $isAdmin ? "\n<link rel=\"stylesheet\" href=\"{$base}/assets/css/admin.css\">" : '';
+    $bodyClass = $isAdmin ? ' class="admin-ui"' : '';
     echo <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -11,9 +14,10 @@ function pageHead(string $title, bool $isAdmin = false): void {
 <link rel="stylesheet" href="https://use.typekit.net/uef7mgf.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="{$base}/assets/css/main.css">
+<link rel="stylesheet" href="{$base}/assets/css/main.css">{$adminCss}
+<link rel="icon" href="{$base}/assets/img/hp.svg">
 </head>
-<body>
+<body{$bodyClass}>
 HTML;
 }
 
@@ -37,7 +41,7 @@ function adminNav(string $active = ''): void {
     $items = [
         'dashboard'    => ['Dashboard',           'bi-speedometer2',   '/admin/index.php'],
         'participants' => ['Participants',        'bi-people-fill',    '/admin/participants.php'],
-        'reports'      => ['Reports & Analytics', 'bi-bar-chart-fill', '/admin/reports.php'],
+        'reports'      => ['Reports',             'bi-bar-chart-fill', '/admin/reports.php'],
     ];
     $initials = strtoupper(substr($admin['name'], 0, 1));
     $links = '';
@@ -54,13 +58,13 @@ HTML;
     echo <<<HTML
 <nav class="admin-sidebar d-flex flex-column">
   <div class="sidebar-brand">
-    <div class="ferrari-logo">🏎</div>
+    <img src="{$base}/assets/img/scuderia-ferrari-hp.svg" alt="Scuderia Ferrari HP">
     <div>
-      <div class="brand-name">Pit Lane</div>
       <div class="brand-sub">Admin Portal</div>
+      <div class="brand-name">A Pit Lane<br>of Ferrari</div>
     </div>
   </div>
-  <ul class="nav flex-column flex-grow-1 px-2">
+  <ul class="nav flex-column flex-grow-1">
     {$links}
   </ul>
   <div class="sidebar-footer">

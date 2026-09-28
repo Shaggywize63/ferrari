@@ -230,18 +230,18 @@ pageHead('Reports', true);
 <script>
 // Chart.js is loaded by pageFoot() below, so build the charts once the page has parsed.
 document.addEventListener('DOMContentLoaded', () => {
-Chart.defaults.color = '#888';
-Chart.defaults.font.family = 'Inter';
+Chart.defaults.color = '#5B6B7F';
+Chart.defaults.font.family = "'forma-djr-text', system-ui, sans-serif";
 
 const palette = {
-  red:    '#DC0000',
+  red:    '#D40000',
   gold:   '#C8A84B',
   blue:   '#0096D6',
-  gridLine: 'rgba(13,27,62,.09)',
+  gridLine: '#E3E9F2',
 };
 const axes = {
-  x:{grid:{color:palette.gridLine},ticks:{color:'#888'}},
-  y:{grid:{color:palette.gridLine},ticks:{color:'#888',precision:0},beginAtZero:true},
+  x:{grid:{color:palette.gridLine},ticks:{color:'#5B6B7F'}},
+  y:{grid:{color:palette.gridLine},ticks:{color:'#5B6B7F',precision:0},beginAtZero:true},
 };
 
 // Registrations & races trend
@@ -252,17 +252,17 @@ new Chart('regTrend', {
     datasets: [{
       label: 'Registrations',
       data:  <?= json_encode(array_column(array_values($days), 'reg')) ?>,
-      borderColor: palette.red, backgroundColor: 'rgba(220,0,0,.10)',
+      borderColor: palette.red, backgroundColor: 'rgba(212,0,0,.08)',
       fill: true, tension: .35, pointRadius: 2,
     }, {
       label: 'Races',
       data:  <?= json_encode(array_column(array_values($days), 'races')) ?>,
-      borderColor: palette.blue, backgroundColor: 'rgba(0,150,214,.10)',
+      borderColor: '#1140D8', backgroundColor: 'rgba(17,64,216,.08)',
       fill: true, tension: .35, pointRadius: 2,
     }]
   },
   options: { responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:'#888',font:{size:11}}}},
+    plugins:{legend:{labels:{color:'#5B6B7F',font:{size:11}}}},
     scales: axes,
   }
 });
@@ -272,7 +272,7 @@ new Chart('hourChart', {
   type: 'bar',
   data:{
     labels: <?= json_encode(array_map(static fn($h) => sprintf('%02d:00', $h), range(0, 23))) ?>,
-    datasets:[{ label:'Races', data:<?= json_encode($byHour) ?>, backgroundColor:'rgba(0,150,214,.7)', borderRadius:4 }]
+    datasets:[{ label:'Races', data:<?= json_encode($byHour) ?>, backgroundColor:'#1140D8', borderRadius:0 }]
   },
   options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales: axes }
 });
@@ -285,15 +285,15 @@ new Chart('cityChart', {
     datasets:[{
       label:'Participants',
       data:<?= json_encode(array_map('intval',array_column($byCity,'cnt'))) ?>,
-      backgroundColor:'rgba(200,168,75,.7)',
-      borderRadius:4,
+      backgroundColor:'#0D1B3E',
+      borderRadius:0,
     }]
   },
   options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
     plugins:{legend:{display:false}},
     scales:{
-      x:{grid:{color:palette.gridLine},ticks:{color:'#888',precision:0},beginAtZero:true},
-      y:{grid:{color:palette.gridLine},ticks:{color:'#888'}},
+      x:{grid:{color:palette.gridLine},ticks:{color:'#5B6B7F',precision:0},beginAtZero:true},
+      y:{grid:{color:palette.gridLine},ticks:{color:'#5B6B7F'}},
     }
   }
 });

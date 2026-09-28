@@ -1,0 +1,354 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Admin portal — same look as the kiosk app and live leaderboard:
+   white, navy type, HP blue accents, a hint of Ferrari red, square edges,
+   letter-spaced uppercase labels and the two blue slashes in the header.
+   Loaded after main.css on admin pages only (body.admin-ui).
+   ───────────────────────────────────────────────────────────────────────── */
+.admin-ui {
+  --navy:      #0D1B3E;
+  --red:       #D40000;
+  --hp-blue:   #0096D6;
+  --slash:     #1140D8;
+  --muted:     #5B6B7F;
+  --line:      #E3E9F2;
+  --tile:      #EEF4FB;
+  --text-muted: #5B6B7F;
+  --card-border: #E3E9F2;
+  --ferrari-red: #D40000;
+  --eyebrow: .7rem;
+  background: #FFFFFF;
+  color: var(--navy);
+  font-feature-settings: "tnum" 1;
+}
+
+/* eyebrow / label style used across the kiosk (e.g. "STATION 04") */
+.admin-ui .eyebrow,
+.admin-ui .stat-label,
+.admin-ui .table-dark-custom thead th,
+.admin-ui .form-label {
+  font-size: var(--eyebrow);
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.admin-ui .eyebrow.red { color: var(--red); }
+
+/* ── Sidebar ── */
+.admin-ui .admin-sidebar {
+  background: #FFFFFF;
+  border-right: 1px solid var(--line);
+}
+.admin-ui .sidebar-brand {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .9rem;
+  padding: 1.6rem 1.5rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.admin-ui .sidebar-brand img { height: 40px; width: auto; display: block; }
+.admin-ui .sidebar-brand .brand-sub { color: var(--red); font-size: var(--eyebrow); letter-spacing: .2em; }
+.admin-ui .sidebar-brand .brand-name {
+  color: var(--navy);
+  font-family: 'forma-djr-display', 'forma-djr-text', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+.admin-ui .admin-sidebar .nav { padding: 1rem 0 !important; }
+.admin-ui .admin-sidebar .nav-link {
+  color: var(--muted);
+  border-radius: 0;
+  margin: 0;
+  padding: .85rem 1.5rem;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  border-left: 3px solid transparent;
+}
+.admin-ui .admin-sidebar .nav-link i { font-size: .95rem; color: #9AA7B8; }
+.admin-ui .admin-sidebar .nav-link:hover { color: var(--navy); background: #F6F9FD; }
+.admin-ui .admin-sidebar .nav-link.active {
+  color: var(--navy);
+  background: var(--tile);
+  border-left-color: var(--red);
+  font-weight: 600;
+}
+.admin-ui .admin-sidebar .nav-link.active i { color: var(--red); }
+.admin-ui .sidebar-footer { border-top: 1px solid var(--line); padding: 1.1rem 1.5rem; }
+.admin-ui .sidebar-footer .fw-600 { color: var(--navy); }
+.admin-ui .sidebar-footer .text-muted { color: var(--muted) !important; text-transform: uppercase; letter-spacing: .14em; font-size: .62rem !important; }
+.admin-ui .sidebar-footer a { color: var(--muted) !important; }
+.admin-ui .sidebar-footer a:hover { color: var(--red) !important; }
+.admin-ui .avatar { border-radius: 0; background: var(--navy); font-size: .8rem; }
+
+/* ── Top bar: kiosk header with eyebrow + the two blue slashes ── */
+.admin-ui .admin-topbar {
+  height: 88px;
+  box-shadow: none;
+  border-bottom: 1px solid var(--line);
+  padding: 0 2.5rem;
+  overflow: hidden;
+}
+.admin-ui .admin-topbar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: max(300px, 28%);
+  width: 330px;
+  height: 88px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(135deg, transparent calc(50% - 26px), var(--slash) calc(50% - 26px) calc(50% + 26px), transparent calc(50% + 26px)),
+    linear-gradient(135deg, transparent calc(50% - 26px), var(--slash) calc(50% - 26px) calc(50% + 26px), transparent calc(50% + 26px));
+  background-repeat: no-repeat;
+  background-size: 158px 88px, 158px 88px;
+  background-position: left top, 150px top;
+}
+.admin-ui .admin-topbar > * { position: relative; z-index: 1; }
+.admin-ui .page-title {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--navy);
+  line-height: 1;
+}
+.admin-ui .page-title::before {
+  content: 'Admin Portal';
+  font-size: var(--eyebrow);
+  font-weight: 500;
+  letter-spacing: .2em;
+  color: var(--red);
+}
+.admin-ui .admin-content { padding: 2.25rem 2.5rem 3rem; }
+
+/* ── Cards & tiles: square, hairline borders, no shadows ── */
+.admin-ui .card {
+  border-radius: 0;
+  border: 1px solid var(--line);
+  box-shadow: none;
+  color: var(--navy);
+}
+.admin-ui .card-header {
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--line);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--navy);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+.admin-ui .card-header > span,
+.admin-ui .card-header > form { flex: 1; }
+.admin-ui .card-header .text-ferrari { color: var(--red) !important; }
+
+.admin-ui .stat-card {
+  border-radius: 0;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  box-shadow: none;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  padding: 1.25rem 1.35rem 1.35rem;
+  min-height: 132px;
+}
+.admin-ui .stat-card .stat-label { order: 1; margin: 0; padding-right: 1.75rem; }
+.admin-ui .stat-card .stat-value {
+  order: 2;
+  margin-top: auto;
+  font-family: 'forma-djr-display', 'forma-djr-text', system-ui, sans-serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1;
+  color: var(--navy);
+}
+.admin-ui .stat-card .stat-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: auto;
+  height: auto;
+  background: none !important;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.admin-ui .stat-card.red   { border-top-color: var(--red); }
+.admin-ui .stat-card.blue  { border-top-color: var(--slash); }
+.admin-ui .stat-card.gold  { border-top-color: var(--navy); }
+.admin-ui .stat-card.green { border-top-color: var(--hp-blue); }
+.admin-ui .stat-card.red   .stat-icon { color: var(--red); }
+.admin-ui .stat-card.blue  .stat-icon { color: var(--slash); }
+.admin-ui .stat-card.gold  .stat-icon { color: var(--navy); }
+.admin-ui .stat-card.green .stat-icon { color: var(--hp-blue); }
+.admin-ui a:hover .stat-card { background: #F6F9FD; }
+
+/* ── Buttons: square, uppercase, letter-spaced ── */
+.admin-ui .btn { border-radius: 0; }
+.admin-ui .btn-ferrari,
+.admin-ui .btn-outline-ferrari {
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  padding: .7rem 1.15rem;
+  border-radius: 0;
+  transform: none !important;
+}
+.admin-ui .btn-ferrari { background: var(--red); color: #FFFFFF; border: 1px solid var(--red); }
+.admin-ui .btn-ferrari:hover { background: #B00000; border-color: #B00000; color: #FFFFFF; }
+.admin-ui .btn-outline-ferrari { background: #FFFFFF; color: var(--navy); border: 1px solid rgba(13, 27, 62, .28); }
+.admin-ui .btn-outline-ferrari:hover { background: var(--navy); border-color: var(--navy); color: #FFFFFF; }
+
+/* ── Tables: kiosk leaderboard rows ── */
+.admin-ui .table-dark-custom { color: var(--navy); }
+.admin-ui .table-dark-custom thead th {
+  background: #FFFFFF;
+  border-bottom: 1px solid rgba(13, 27, 62, .35);
+  padding: 1rem 1rem .8rem;
+  white-space: nowrap;
+}
+.admin-ui .table-dark-custom tbody tr { border-bottom: 1px solid var(--line); }
+.admin-ui .table-dark-custom tbody tr:hover { background: #F6F9FD; }
+.admin-ui .table-dark-custom tbody td { padding: 1rem; border-color: var(--line); }
+.admin-ui .table-dark-custom code { font-family: inherit; font-weight: 600; }
+
+.admin-ui .score-pill {
+  border-radius: 0;
+  background: var(--tile);
+  color: var(--navy);
+  font-weight: 700;
+  padding: .3rem .6rem;
+}
+.admin-ui .rank-badge { border-radius: 0; font-weight: 700; letter-spacing: .04em; }
+.admin-ui .rank-1 { background: var(--red); color: #FFFFFF; }
+.admin-ui .rank-2,
+.admin-ui .rank-3 { background: var(--tile); color: var(--red); }
+
+/* ── Forms: kiosk underline inputs ── */
+.admin-ui .form-control,
+.admin-ui .form-select {
+  border-radius: 0;
+  border: 1px solid #D5DEE9;
+  color: var(--navy);
+  background-color: #FFFFFF;
+}
+.admin-ui .form-control:focus,
+.admin-ui .form-select:focus { border-color: var(--hp-blue); box-shadow: 0 0 0 3px rgba(0, 150, 214, .12); }
+.admin-ui .alert-ferrari { border-radius: 0; }
+
+/* ── Login: kiosk "Step one" layout ── */
+.admin-login {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.admin-login header,
+.admin-login footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3rem;
+  border-bottom: 1px solid var(--line);
+  height: 88px;
+  position: relative;
+  overflow: hidden;
+}
+.admin-login footer { border-bottom: 0; border-top: 1px solid var(--line); height: 64px; }
+.admin-login header img { height: 40px; width: auto; }
+.admin-login header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 12%;
+  width: 330px;
+  height: 118px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(135deg, transparent calc(50% - 34px), var(--slash) calc(50% - 34px) calc(50% + 34px), transparent calc(50% + 34px)),
+    linear-gradient(135deg, transparent calc(50% - 34px), var(--slash) calc(50% - 34px) calc(50% + 34px), transparent calc(50% + 34px));
+  background-repeat: no-repeat;
+  background-size: 210px 118px, 210px 118px;
+  background-position: left top, 150px top;
+}
+.admin-login main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 4rem;
+  padding: 3rem;
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+}
+.admin-login h1 {
+  font-family: 'forma-djr-display', 'forma-djr-text', system-ui, sans-serif;
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: .92;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin: .9rem 0 1.4rem;
+}
+.admin-login .lead-copy { color: var(--muted); font-size: 1.15rem; max-width: 26rem; line-height: 1.45; }
+.admin-login .field { border-bottom: 1px solid var(--line); padding: 1.1rem 0 .4rem; }
+.admin-login .field label { display: block; margin-bottom: .35rem; }
+.admin-login .field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 1.6rem;
+  color: var(--navy);
+  padding: .25rem 0 .5rem;
+}
+.admin-login .field input::placeholder { color: #9AA7B8; }
+.admin-login .field:focus-within { border-bottom-color: var(--hp-blue); }
+.admin-login .btn-ferrari {
+  margin-top: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  font-size: .85rem;
+  padding: 1.35rem 2.1rem;
+}
+.admin-login .error {
+  border-left: 3px solid var(--red);
+  background: #FFF4F4;
+  color: var(--red);
+  padding: .8rem 1rem;
+  font-size: .9rem;
+}
+.admin-login footer a { color: var(--navy); text-decoration: none; }
+.admin-login footer a:hover { color: var(--red); }
+
+@media (max-width: 1100px) {
+  .admin-ui .admin-topbar::after { display: none; }
+}
+@media (max-width: 768px) {
+  .admin-ui .admin-topbar { height: auto; min-height: 88px; flex-wrap: wrap; padding: 1rem 1.25rem; }
+  .admin-ui .admin-topbar .ms-auto { margin-left: 0 !important; flex-wrap: wrap; }
+  .admin-login header::after { display: none; }
+  .admin-ui .admin-content { padding: 1.5rem 1rem 2rem; }
+  .admin-login main { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.25rem; }
+  .admin-login header, .admin-login footer { padding: 0 1.25rem; }
+}
+.admin-ui canvas { border-radius: 0; }
+.admin-ui .id-cell { white-space: nowrap; }
+/* the main column fills the width beside the fixed sidebar (wide tables scroll inside their card) */
+.admin-ui .admin-main { flex: 1 1 auto; min-width: 0; }

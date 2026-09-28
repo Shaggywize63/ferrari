@@ -3,3 +3,4 @@ qrcodes/*.png
 .env
 *.env
 *.log
+config/local.php

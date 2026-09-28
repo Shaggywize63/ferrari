@@ -23,39 +23,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 pageHead('Admin Login', true);
 ?>
-<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem">
-  <div style="width:100%;max-width:400px">
-    <div class="text-center mb-4">
-      <div style="font-size:3rem">🏎</div>
-      <h1 class="h4 fw-800">Admin Portal</h1>
-      <div style="color:var(--text-muted);font-size:.875rem">A Pit Lane of Ferrari</div>
+<div class="admin-login">
+  <header>
+    <img src="<?= APP_URL ?>/assets/img/scuderia-ferrari-hp.svg" alt="Scuderia Ferrari HP">
+    <div class="text-center" style="position:relative;z-index:1">
+      <div class="eyebrow red">Admin Portal</div>
+      <div style="font-size:1.1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase">Sign In</div>
     </div>
-    <div class="card p-4">
+    <span style="width:100px"></span>
+  </header>
+
+  <main>
+    <section>
+      <div class="eyebrow">A Pit Lane of Ferrari · Powered by HP</div>
+      <h1>Race<br>Control</h1>
+      <p class="lead-copy">Registrations, journey progress and race results from every kiosk, live.</p>
+    </section>
+
+    <section>
       <?php if ($error): ?>
-      <div class="alert-ferrari mb-3"><?= sanitize($error) ?></div>
+      <div class="error mb-2"><?= sanitize($error) ?></div>
       <?php endif; ?>
       <form method="POST">
-        <div class="mb-3">
-          <label class="form-label">Username</label>
-          <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+        <div class="field">
+          <label class="form-label" for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Your username" required autofocus autocomplete="username">
         </div>
-        <div class="mb-4">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+        <div class="field">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-ferrari w-100 py-3">
-          <i class="bi bi-shield-lock me-2"></i>Login to Admin
-        </button>
+        <button type="submit" class="btn btn-ferrari">Enter Race Control <span aria-hidden="true">→</span></button>
       </form>
-      <div class="mt-3 text-center" style="font-size:.8rem;color:var(--text-muted)">
-        Default: admin / Admin@123
-      </div>
-    </div>
-    <div class="text-center mt-3">
-      <a href="<?= APP_URL ?>/leaderboard.php" style="color:var(--text-muted);font-size:.85rem">
-        ← Back to Leaderboard
-      </a>
-    </div>
-  </div>
+    </section>
+  </main>
+
+  <footer>
+    <span class="eyebrow">A Pit Lane of Ferrari · Powered by HP</span>
+    <a class="eyebrow" style="color:var(--navy)" href="<?= APP_URL ?>/leaderboard.html">Live Leaderboard →</a>
+  </footer>
 </div>
 <?php pageFoot(); ?>
