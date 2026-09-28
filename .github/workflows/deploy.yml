@@ -32,7 +32,11 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
 
+          # /.htaccess is excluded: the server copy holds settings added on the server
+          # (e.g. DB credentials via SetEnv) and must never be overwritten or deleted.
+          # Changes to .htaccess in the repo therefore need to be applied on the server by hand.
           rsync -avz --delete \
+            --exclude='/.htaccess' \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='qrcodes/*.png' \
