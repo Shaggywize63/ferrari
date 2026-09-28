@@ -1,14 +1,15 @@
 /* ── Ferrari Pit Lane Competition – Main Styles ── */
 :root {
   --ferrari-red:    #DC0000;
-  --ferrari-dark:   #1A1A1A;
-  --ferrari-darker: #0D0D0D;
+  --ferrari-dark:   #E8EFF8;
+  --ferrari-darker: #F4F7FC;
   --ferrari-gold:   #C8A84B;
   --ferrari-silver: #B0B0B0;
-  --card-bg:        #1E1E1E;
-  --card-border:    #2E2E2E;
-  --text-primary:   #F0F0F0;
-  --text-muted:     #888;
+  --hp-blue:        #0096D6;
+  --card-bg:        #FFFFFF;
+  --card-border:    #D0DCE8;
+  --text-primary:   #1A1A2E;
+  --text-muted:     #6B7A8D;
   --success:        #28a745;
   --warning:        #ffc107;
   --danger:         #DC0000;
@@ -21,6 +22,14 @@
 body {
   font-family: 'forma-djr-text', 'Forma DJR Text', system-ui, sans-serif;
   background: var(--ferrari-darker);
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0px,
+      transparent 40px,
+      rgba(0, 150, 214, .045) 40px,
+      rgba(0, 150, 214, .045) 80px
+    );
   color: var(--text-primary);
   margin: 0;
   min-height: 100vh;
@@ -38,26 +47,28 @@ h1, h2, h3, h4, h5, h6,
 
 /* ── Public pages ── */
 .public-header {
-  background: var(--ferrari-darker);
+  background: #fff;
   border-bottom: 2px solid var(--ferrari-red);
-  padding: 1rem 2rem;
+  padding: .75rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 1px 8px rgba(0, 150, 214, .08);
 }
 .public-header .logo-text {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -.5px;
+  color: var(--text-primary);
 }
 .public-header .logo-text span { color: var(--ferrari-red); }
 
 .hero-section {
-  background: linear-gradient(135deg, var(--ferrari-darker) 0%, #1a0000 60%, var(--ferrari-darker) 100%);
-  padding: 5rem 2rem;
+  background: linear-gradient(135deg, #0D1B3E 0%, #1a0818 50%, #0D1B3E 100%);
+  padding: 4rem 2rem;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -66,18 +77,21 @@ h1, h2, h3, h4, h5, h6,
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(220,0,0,.15) 0%, transparent 70%);
+  background:
+    repeating-linear-gradient(135deg, transparent 0, transparent 50px, rgba(0,150,214,.06) 50px, rgba(0,150,214,.06) 100px),
+    radial-gradient(ellipse at center, rgba(220,0,0,.18) 0%, transparent 70%);
 }
 .hero-section .hero-title {
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-size: clamp(1.75rem, 4vw, 3rem);
   font-weight: 900;
   letter-spacing: -1px;
   position: relative;
+  color: #fff;
 }
 .hero-section .hero-title .accent { color: var(--ferrari-red); }
 .hero-section .hp-badge {
   display: inline-block;
-  background: #0096D6;
+  background: var(--hp-blue);
   color: #fff;
   font-size: .75rem;
   font-weight: 700;
@@ -94,11 +108,13 @@ h1, h2, h3, h4, h5, h6,
   border: 1px solid var(--card-border);
   border-radius: 12px;
   color: var(--text-primary);
+  box-shadow: 0 1px 6px rgba(0, 150, 214, .06);
 }
 .card-header {
-  background: transparent;
+  background: rgba(0, 150, 214, .04);
   border-bottom: 1px solid var(--card-border);
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* ── Stat cards ── */
@@ -106,26 +122,27 @@ h1, h2, h3, h4, h5, h6,
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0, 150, 214, .06);
 }
 .stat-card .stat-icon {
-  width: 48px; height: 48px;
-  border-radius: 12px;
+  width: 44px; height: 44px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem;
-  margin-bottom: .75rem;
+  font-size: 1.25rem;
+  margin-bottom: .6rem;
 }
 .stat-card .stat-value {
-  font-size: 2.25rem;
+  font-size: 1.75rem;
   font-weight: 800;
   line-height: 1;
   margin-bottom: .25rem;
 }
 .stat-card .stat-label {
   color: var(--text-muted);
-  font-size: .875rem;
+  font-size: .8rem;
 }
 .stat-card.red   { border-top: 3px solid var(--ferrari-red);  }
 .stat-card.gold  { border-top: 3px solid var(--ferrari-gold); }
@@ -140,8 +157,8 @@ h1, h2, h3, h4, h5, h6,
 /* ── Admin sidebar ── */
 .admin-sidebar {
   width: var(--sidebar-w);
-  background: var(--ferrari-dark);
-  border-right: 1px solid var(--card-border);
+  background: #0D1B3E;
+  border-right: 1px solid rgba(0,150,214,.25);
   min-height: 100vh;
   position: fixed;
   top: 0; left: 0;
@@ -150,21 +167,21 @@ h1, h2, h3, h4, h5, h6,
   overflow-y: auto;
 }
 .sidebar-brand {
-  padding: 1.5rem 1.25rem;
-  border-bottom: 1px solid var(--card-border);
+  padding: 1.25rem 1.25rem;
+  border-bottom: 1px solid rgba(0,150,214,.2);
   display: flex;
   align-items: center;
   gap: .75rem;
 }
-.ferrari-logo { font-size: 2rem; }
-.brand-name  { font-weight: 800; font-size: 1rem; letter-spacing: -.3px; }
-.brand-sub   { font-size: .7rem; color: var(--ferrari-red); text-transform: uppercase; letter-spacing: 1px; }
+.ferrari-logo { font-size: 1.75rem; }
+.brand-name  { font-weight: 800; font-size: .95rem; letter-spacing: -.3px; color: #fff; }
+.brand-sub   { font-size: .65rem; color: var(--hp-blue); text-transform: uppercase; letter-spacing: 1px; }
 
 .admin-sidebar .nav-link {
-  color: var(--text-muted);
-  padding: .625rem 1rem;
+  color: rgba(255,255,255,.6);
+  padding: .6rem 1rem;
   border-radius: 8px;
-  font-size: .875rem;
+  font-size: .85rem;
   font-weight: 500;
   transition: all .15s;
   margin-bottom: 2px;
@@ -172,17 +189,18 @@ h1, h2, h3, h4, h5, h6,
 .admin-sidebar .nav-link:hover,
 .admin-sidebar .nav-link.active {
   color: #fff;
-  background: rgba(220,0,0,.15);
+  background: rgba(0,150,214,.18);
 }
 .admin-sidebar .nav-link.active {
-  color: var(--ferrari-red);
-  background: rgba(220,0,0,.1);
+  color: #fff;
+  background: rgba(220,0,0,.25);
+  border-left: 3px solid var(--ferrari-red);
   font-weight: 600;
 }
 
 .sidebar-footer {
   padding: 1rem 1.25rem;
-  border-top: 1px solid var(--card-border);
+  border-top: 1px solid rgba(0,150,214,.2);
   margin-top: auto;
 }
 .avatar {
@@ -204,7 +222,7 @@ h1, h2, h3, h4, h5, h6,
 }
 .admin-topbar {
   height: var(--header-h);
-  background: var(--ferrari-dark);
+  background: #fff;
   border-bottom: 1px solid var(--card-border);
   display: flex;
   align-items: center;
@@ -213,14 +231,16 @@ h1, h2, h3, h4, h5, h6,
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,150,214,.08);
 }
 .admin-content {
-  padding: 2rem;
+  padding: 1.75rem;
 }
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -.5px;
+  color: var(--text-primary);
 }
 
 /* ── Buttons ── */
@@ -251,37 +271,37 @@ h1, h2, h3, h4, h5, h6,
   color: var(--text-primary);
 }
 .table-dark-custom thead th {
-  background: rgba(255,255,255,.04);
+  background: rgba(0, 150, 214, .06);
   border-color: var(--card-border);
   font-size: .75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .5px;
   color: var(--text-muted);
-  padding: .75rem 1rem;
+  padding: .7rem 1rem;
 }
 .table-dark-custom tbody tr {
   border-color: var(--card-border);
   transition: background .1s;
 }
-.table-dark-custom tbody tr:hover { background: rgba(255,255,255,.03); }
-.table-dark-custom tbody td { padding: .875rem 1rem; vertical-align: middle; border-color: var(--card-border); }
+.table-dark-custom tbody tr:hover { background: rgba(0, 150, 214, .04); }
+.table-dark-custom tbody td { padding: .8rem 1rem; vertical-align: middle; border-color: var(--card-border); }
 
 /* ── Forms ── */
 .form-control, .form-select {
-  background: rgba(255,255,255,.05);
+  background: #fff;
   border-color: var(--card-border);
   color: var(--text-primary);
   border-radius: 8px;
 }
 .form-control:focus, .form-select:focus {
-  background: rgba(255,255,255,.07);
-  border-color: var(--ferrari-red);
+  background: #fff;
+  border-color: var(--hp-blue);
   color: var(--text-primary);
-  box-shadow: 0 0 0 .2rem rgba(220,0,0,.15);
+  box-shadow: 0 0 0 .2rem rgba(0, 150, 214, .15);
 }
-.form-control::placeholder { color: var(--text-muted); }
-.form-label { font-size: .875rem; font-weight: 500; color: var(--text-muted); margin-bottom: .35rem; }
+.form-control::placeholder { color: #AABBC8; }
+.form-label { font-size: .85rem; font-weight: 500; color: var(--text-muted); margin-bottom: .3rem; }
 
 /* ── Leaderboard ── */
 .leaderboard-row { transition: all .2s; }
@@ -294,7 +314,8 @@ h1, h2, h3, h4, h5, h6,
   font-size: .875rem;
   padding: .2rem .6rem;
   border-radius: 20px;
-  background: rgba(255,255,255,.1);
+  background: rgba(0, 150, 214, .1);
+  color: var(--hp-blue);
 }
 .rank-1 { background: rgba(200,168,75,.2); color: var(--ferrari-gold); }
 .rank-2 { background: rgba(192,192,192,.2); color: #C0C0C0; }
@@ -365,8 +386,8 @@ h1, h2, h3, h4, h5, h6,
 
 /* ── Registration ── */
 .reg-container {
-  max-width: 540px;
-  margin: 3rem auto;
+  max-width: 520px;
+  margin: 2.5rem auto;
   padding: 0 1rem;
 }
 .reg-card {
@@ -374,13 +395,14 @@ h1, h2, h3, h4, h5, h6,
   border: 1px solid var(--card-border);
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,150,214,.1);
 }
 .reg-card-header {
-  background: linear-gradient(135deg, var(--ferrari-red), #8b0000);
-  padding: 2rem;
+  background: linear-gradient(135deg, #0D1B3E 0%, #DC0000 100%);
+  padding: 1.75rem 2rem;
   text-align: center;
 }
-.reg-card-body { padding: 2rem; }
+.reg-card-body { padding: 1.75rem 2rem; }
 
 /* ── Alerts ── */
 .alert-ferrari {
@@ -400,9 +422,9 @@ h1, h2, h3, h4, h5, h6,
 
 /* ── Participant dashboard ── */
 .participant-header {
-  background: linear-gradient(135deg, var(--ferrari-dark), #0d0000);
+  background: linear-gradient(135deg, #0D1B3E, #1a0818);
   border-bottom: 2px solid var(--ferrari-red);
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
 }
 .progress-stage {
   display: flex;
@@ -415,19 +437,24 @@ h1, h2, h3, h4, h5, h6,
   gap: .5rem;
 }
 .stage-dot {
-  width: 32px; height: 32px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: .75rem;
+  font-size: .7rem;
   font-weight: 700;
   border: 2px solid var(--card-border);
   background: var(--card-bg);
   color: var(--text-muted);
 }
 .stage-dot.completed { background: var(--ferrari-red); border-color: var(--ferrari-red); color: #fff; }
-.stage-dot.active    { border-color: var(--ferrari-red); color: var(--ferrari-red); }
-.stage-line { width: 40px; height: 2px; background: var(--card-border); }
+.stage-dot.active    { border-color: var(--hp-blue); color: var(--hp-blue); }
+.stage-line { width: 36px; height: 2px; background: var(--card-border); }
 .stage-line.completed { background: var(--ferrari-red); }
+
+/* ── Leaderboard public ── */
+.leaderboard-page-bg {
+  background: var(--ferrari-darker);
+}
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
@@ -445,7 +472,7 @@ h1, h2, h3, h4, h5, h6,
 .bg-ferrari   { background: var(--ferrari-red) !important; }
 .border-ferrari { border-color: var(--ferrari-red) !important; }
 .rounded-xl { border-radius: 12px; }
-.shadow-dark { box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.shadow-dark { box-shadow: 0 4px 24px rgba(0, 150, 214, .12); }
 
 /* Chart containers */
 .chart-container { position: relative; }
@@ -492,8 +519,8 @@ canvas { border-radius: 8px; }
 /* ── Fullscreen leaderboard ── */
 .leaderboard-fullscreen-btn {
   background: transparent;
-  border: 1px solid rgba(244,242,238,.24);
-  color: #F4F2EE;
+  border: 1px solid rgba(0, 150, 214, .35);
+  color: var(--hp-blue);
   padding: .4rem .9rem;
   border-radius: 6px;
   font-size: .8rem;
