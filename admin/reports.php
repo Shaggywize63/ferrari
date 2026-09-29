@@ -38,19 +38,10 @@ foreach ($pdo->query("SELECT HOUR(created_at) AS h, COUNT(*) AS cnt FROM race_sc
     $byHour[(int)$r['h']] = (int)$r['cnt'];
 }
 
-// City distribution
-$byCity = $pdo->query("
-    SELECT city, COUNT(*) AS cnt
-    FROM (SELECT COALESCE(NULLIF(city,''),'Unknown') AS city FROM participants) c
-    GROUP BY city ORDER BY cnt DESC LIMIT 10
-")->fetchAll();
-
 // Best race score per driver
 $raceCounts = $pdo->query('SELECT code, COUNT(*) AS races FROM race_scores GROUP BY code')->fetchAll(PDO::FETCH_KEY_PAIR);
-$cities     = $pdo->query("SELECT access_code, city FROM participants")->fetchAll(PDO::FETCH_KEY_PAIR);
 $top10 = array_map(static fn(array $r) => $r + [
     'races' => (int)($raceCounts[$r['code']] ?? 0),
-    'city'  => $cities[$r['code']] ?? '',
 ], bestRaceScores($pdo, 0, 10));
 
 // Most recent races
@@ -134,20 +125,12 @@ pageHead('Reports', true);
 
     <!-- Charts row 1 -->
     <div class="row g-3 mb-3">
-      <div class="col-md-8">
+      <div class="col-12">
         <div class="card h-100">
           <div class="card-header px-4 py-3">
             <i class="bi bi-bar-chart-line me-2 text-ferrari"></i>Registrations &amp; Races (30 Days)
           </div>
           <div class="card-body"><div class="chart-container" style="height:220px"><canvas id="regTrend"></canvas></div></div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-header px-4 py-3">
-            <i class="bi bi-geo-alt me-2 text-ferrari"></i>Participants by City
-          </div>
-          <div class="card-body"><div class="chart-container" style="height:220px"><canvas id="cityChart"></canvas></div></div>
         </div>
       </div>
     </div>
@@ -174,10 +157,10 @@ pageHead('Reports', true);
           </div>
           <div class="table-responsive">
             <table class="table table-dark-custom mb-0">
-              <thead><tr><th>Rank</th><th>Driver</th><th>City</th><th>Races</th><th class="text-end">Best</th></tr></thead>
+              <thead><tr><th>Rank</th><th>Driver</th><th>Races</th><th class="text-end">Best</th></tr></thead>
               <tbody>
                 <?php if (!$top10): ?>
-                <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No races yet.</td></tr>
+                <tr><td colspan="4" class="text-center py-4" style="color:var(--text-muted)">No races yet.</td></tr>
                 <?php endif; ?>
                 <?php foreach ($top10 as $i => $e): ?>
                 <tr>
@@ -185,7 +168,6 @@ pageHead('Reports', true);
                   <td class="fw-600"><?= sanitize($e['name']) ?>
                     <div><code style="font-size:.75rem;color:#0096D6;letter-spacing:.08em"><?= sanitize($e['code']) ?></code></div>
                   </td>
-                  <td style="color:var(--text-muted)"><?= sanitize($e['city'] ?: '–') ?></td>
                   <td><?= (int)$e['races'] ?></td>
                   <td class="text-end"><span class="score-pill"><?= number_format((int)$e['score']) ?></span></td>
                 </tr>
@@ -275,27 +257,6 @@ new Chart('hourChart', {
     datasets:[{ label:'Races', data:<?= json_encode($byHour) ?>, backgroundColor:'#1140D8', borderRadius:0 }]
   },
   options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales: axes }
-});
-
-// City chart
-new Chart('cityChart', {
-  type: 'bar',
-  data:{
-    labels:<?= json_encode(array_column($byCity,'city')) ?>,
-    datasets:[{
-      label:'Participants',
-      data:<?= json_encode(array_map('intval',array_column($byCity,'cnt'))) ?>,
-      backgroundColor:'#0D1B3E',
-      borderRadius:0,
-    }]
-  },
-  options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{grid:{color:palette.gridLine},ticks:{color:'#5B6B7F',precision:0},beginAtZero:true},
-      y:{grid:{color:palette.gridLine},ticks:{color:'#5B6B7F'}},
-    }
-  }
 });
 });
 </script>
