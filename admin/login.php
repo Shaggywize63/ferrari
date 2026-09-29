@@ -35,7 +35,7 @@ pageHead('Admin Login', true);
       <div class="eyebrow red">Admin Portal</div>
       <div style="font-size:1.1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase">Sign In</div>
     </div>
-    <span style="width:100px"></span>
+    <span style="width:167px;flex:none"></span>
   </header>
 
   <main>

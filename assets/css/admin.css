@@ -95,19 +95,18 @@
   overflow: hidden;
 }
 .admin-ui .admin-topbar::after {
+  /* HP stripe pair (HP_STRIPE_100_HEX.ai): its own flex slot between the title and the
+     actions, the full height of the bar above its bottom line, so it never overlaps anything */
   content: '';
-  position: absolute;
-  top: 0;
-  left: max(300px, 28%);
-  width: 330px;
-  height: 88px;
+  order: 1;
+  flex: none;
+  align-self: stretch;
+  width: 166.75px;
+  margin-left: 2.5rem;
   pointer-events: none;
-  z-index: 0;
-  /* HP stripe pair (HP_STRIPE_100_HEX.ai): 70deg, #024AD8, 3.5 stripe-widths apart */
-  background-image: url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27167.11%27%20height=%2788%27%20viewBox=%270%200%20167.11%2088%27%3E%3Cg%20fill=%27%23024AD8%27%3E%3Cpolygon%20points=%2732.03,0.00%2062.03,0.00%2030.00,88.00%200.00,88.00%27/%3E%3Cpolygon%20points=%27137.11,0.00%20167.11,0.00%20135.09,88.00%20105.09,88.00%27/%3E%3C/g%3E%3C/svg%3E);
-  background-repeat: no-repeat;
-  background-position: left top;
+  background: url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27166.75%27%20height=%2787%27%20viewBox=%270%200%20166.75%2087%27%3E%3Cg%20fill=%27%23024AD8%27%3E%3Cpolygon%20points=%2731.67,0.00%2061.67,0.00%2030.00,87.00%200.00,87.00%27/%3E%3Cpolygon%20points=%27136.75,0.00%20166.75,0.00%20135.09,87.00%20105.09,87.00%27/%3E%3C/g%3E%3C/svg%3E) no-repeat left top / 100% 100%;
 }
+.admin-ui .admin-topbar .ms-auto { order: 2; }
 .admin-ui .admin-topbar > * { position: relative; z-index: 1; }
 .admin-ui .page-title {
   display: flex;
@@ -269,17 +268,16 @@
 .admin-login footer { border-bottom: 0; border-top: 1px solid var(--line); height: 64px; }
 .admin-login header img { height: 40px; width: auto; }
 .admin-login header::after {
+  /* HP stripe pair inside the header's padding box (above its bottom line), in the space
+     the right-hand spacer reserves */
   content: '';
   position: absolute;
   top: 0;
-  right: 12%;
-  width: 330px;
-  height: 118px;
+  bottom: 0;
+  right: 3rem;
+  width: 166.75px;
   pointer-events: none;
-  /* HP stripe pair (HP_STRIPE_100_HEX.ai): 70deg, #024AD8, 3.5 stripe-widths apart */
-  background-image: url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27223.06%27%20height=%27118%27%20viewBox=%270%200%20223.06%20118%27%3E%3Cg%20fill=%27%23024AD8%27%3E%3Cpolygon%20points=%2742.95,0.00%2082.95,0.00%2040.00,118.00%200.00,118.00%27/%3E%3Cpolygon%20points=%27183.06,0.00%20223.06,0.00%20180.11,118.00%20140.11,118.00%27/%3E%3C/g%3E%3C/svg%3E);
-  background-repeat: no-repeat;
-  background-position: left top;
+  background: url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27166.75%27%20height=%2787%27%20viewBox=%270%200%20166.75%2087%27%3E%3Cg%20fill=%27%23024AD8%27%3E%3Cpolygon%20points=%2731.67,0.00%2061.67,0.00%2030.00,87.00%200.00,87.00%27/%3E%3Cpolygon%20points=%27136.75,0.00%20166.75,0.00%20135.09,87.00%20105.09,87.00%27/%3E%3C/g%3E%3C/svg%3E) no-repeat left top / 100% 100%;
 }
 .admin-login main {
   display: grid;
@@ -334,7 +332,7 @@
 .admin-login footer a { color: var(--navy); text-decoration: none; }
 .admin-login footer a:hover { color: var(--red); }
 
-@media (max-width: 1100px) {
+@media (max-width: 1360px) {
   .admin-ui .admin-topbar::after { display: none; }
 }
 @media (max-width: 768px) {
