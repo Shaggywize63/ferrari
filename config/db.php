@@ -14,6 +14,8 @@ function db(): PDO {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
+        // TIMESTAMP columns are stored in UTC; read and compare them in the app time zone (IST)
+        $pdo->exec("SET time_zone = '" . (new DateTime('now', new DateTimeZone(date_default_timezone_get())))->format('P') . "'");
     }
     return $pdo;
 }
