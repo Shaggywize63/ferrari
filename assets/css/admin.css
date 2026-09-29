@@ -9,7 +9,7 @@
   --navy:      #0D1B3E;
   --red:       #D40000;
   --hp-blue:   #0096D6;
-  --slash:     #1140D8;
+  --slash:     #024AD8;
   --muted:     #5B6B7F;
   --line:      #E3E9F2;
   --tile:      #EEF4FB;
@@ -103,12 +103,10 @@
   height: 88px;
   pointer-events: none;
   z-index: 0;
-  background-image:
-    linear-gradient(135deg, transparent calc(50% - 26px), var(--slash) calc(50% - 26px) calc(50% + 26px), transparent calc(50% + 26px)),
-    linear-gradient(135deg, transparent calc(50% - 26px), var(--slash) calc(50% - 26px) calc(50% + 26px), transparent calc(50% + 26px));
+  /* HP stripe pair (HP_STRIPE_100_HEX.ai): 70deg, #024AD8, 3.5 stripe-widths apart */
+  background-image: url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27167.11%27%20height=%2788%27%20viewBox=%270%200%20167.11%2088%27%3E%3Cg%20fill=%27%23024AD8%27%3E%3Cpolygon%20points=%2732.03,0.00%2062.03,0.00%2030.00,88.00%200.00,88.00%27/%3E%3Cpolygon%20points=%27137.11,0.00%20167.11,0.00%20135.09,88.00%20105.09,88.00%27/%3E%3C/g%3E%3C/svg%3E);
   background-repeat: no-repeat;
-  background-size: 158px 88px, 158px 88px;
-  background-position: left top, 150px top;
+  background-position: left top;
 }
 .admin-ui .admin-topbar > * { position: relative; z-index: 1; }
 .admin-ui .page-title {
@@ -278,12 +276,10 @@
   width: 330px;
   height: 118px;
   pointer-events: none;
-  background-image:
-    linear-gradient(135deg, transparent calc(50% - 34px), var(--slash) calc(50% - 34px) calc(50% + 34px), transparent calc(50% + 34px)),
-    linear-gradient(135deg, transparent calc(50% - 34px), var(--slash) calc(50% - 34px) calc(50% + 34px), transparent calc(50% + 34px));
+  /* HP stripe pair (HP_STRIPE_100_HEX.ai): 70deg, #024AD8, 3.5 stripe-widths apart */
+  background-image: url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27223.06%27%20height=%27118%27%20viewBox=%270%200%20223.06%20118%27%3E%3Cg%20fill=%27%23024AD8%27%3E%3Cpolygon%20points=%2742.95,0.00%2082.95,0.00%2040.00,118.00%200.00,118.00%27/%3E%3Cpolygon%20points=%27183.06,0.00%20223.06,0.00%20180.11,118.00%20140.11,118.00%27/%3E%3C/g%3E%3C/svg%3E);
   background-repeat: no-repeat;
-  background-size: 210px 118px, 210px 118px;
-  background-position: left top, 150px top;
+  background-position: left top;
 }
 .admin-login main {
   display: grid;
