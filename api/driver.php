@@ -2,13 +2,16 @@
 /**
  * Driver record sync — lets a driver log in at any kiosk station with their unique code.
  *
- * GET   /api/driver.php?code=ARJ9876
- *       The driver's latest kiosk record (avatar, car, results; no mobile/email),
- *       plus a sync key so that kiosk can save the record back.
- * POST  /api/driver.php
- *       Body (JSON): { code, rec, mobile? | key? }
+ * GET   /api/driver.php?code=ARJ987
+ *       Station login with the driver's login ID (first 3 letters of the first name +
+ *       first 3 digits of the mobile). Returns the latest kiosk record (avatar, car,
+ *       results; no mobile/email) plus a sync key so that kiosk can save it back.
+ *       409 { ambiguous: true } when more than one driver shares the login ID.
+ * POST  /api/driver.php   { login, mobile }
+ *       Same lookup, narrowed to the driver whose mobile number matches.
+ * POST  /api/driver.php   { code, rec, mobile? | key? }
  *       Saves the record. The registering kiosk proves ownership with the driver's
- *       mobile; any other kiosk with the key it received from GET.
+ *       mobile; any other kiosk with the key it received from a login.
  */
 require_once __DIR__ . '/../includes/bootstrap.php';
 
@@ -34,6 +37,35 @@ function cleanCode(mixed $v): string {
     return strlen($c) >= 3 && strlen($c) <= 16 ? $c : '';
 }
 
+/**
+ * Drivers a login ID can belong to: the exact code, plus codes that extend it by up to
+ * two characters (a shared login ID gets a hidden suffix at registration).
+ */
+function loginCandidates(PDO $pdo, string $login): array {
+    $s = $pdo->prepare(
+        'SELECT p.access_code AS code, p.phone, k.rec, k.rec_ts
+           FROM participants p
+           LEFT JOIN kiosk_records k ON k.code = p.access_code AND k.participant_id = p.id
+          WHERE p.access_code = ? OR (p.access_code LIKE ? AND CHAR_LENGTH(p.access_code) <= ?)
+          LIMIT 50'
+    );
+    $s->execute([$login, $login . '%', strlen($login) + 2]);   // cleanCode() leaves only A-Z0-9
+    return $s->fetchAll();
+}
+
+function sendRecord(array $row): never {
+    $rec = json_decode((string)$row['rec'], true);
+    if (!is_array($rec)) {
+        respond(404, ['success' => false, 'message' => 'Unknown login ID.']);
+    }
+    respond(200, [
+        'success' => true,
+        'rec'     => $rec,
+        'ts'      => (int)$row['rec_ts'],
+        'key'     => kioskSyncKey($row['code']),
+    ]);
+}
+
 $pdo = db();
 ensureKioskSchema($pdo);
 
@@ -43,6 +75,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         respond(413, ['success' => false, 'message' => 'Record too large.']);
     }
     $b    = json_decode($raw, true) ?? [];
+
+    // station login, confirmed with the driver's mobile number
+    if (isset($b['login'])) {
+        $login  = cleanCode($b['login']);
+        $mobile = substr(preg_replace('/\D/', '', (string)($b['mobile'] ?? '')), -10);
+        if ($login === '' || strlen($mobile) !== 10) {
+            respond(422, ['success' => false, 'message' => 'Enter a login ID and mobile number.']);
+        }
+        $match = array_values(array_filter(
+            loginCandidates($pdo, $login),
+            fn($r) => $r['rec'] !== null && substr((string)$r['phone'], -10) === $mobile
+        ));
+        if (!$match) {
+            respond(404, ['success' => false, 'message' => 'No driver matches that login ID and mobile number.']);
+        }
+        usort($match, fn($a, $b) => (int)$b['rec_ts'] <=> (int)$a['rec_ts']);
+        sendRecord($match[0]);
+    }
+
     $code = cleanCode($b['code'] ?? '');
     $rec  = $b['rec'] ?? null;
     if ($code === '' || !is_array($rec) || cleanCode($rec['id'] ?? '') !== $code) {
@@ -97,25 +148,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     respond(200, ['success' => true]);
 }
 
-$code = cleanCode($_GET['code'] ?? '');
-if ($code === '') {
-    respond(422, ['success' => false, 'message' => 'Enter a unique code.']);
+$login = cleanCode($_GET['code'] ?? '');
+if ($login === '') {
+    respond(422, ['success' => false, 'message' => 'Enter a login ID.']);
 }
-$s = $pdo->prepare(
-    'SELECT k.rec, k.rec_ts FROM kiosk_records k
-     JOIN participants p ON p.id = k.participant_id AND p.access_code = k.code
-     WHERE k.code = ? LIMIT 1'
-);
-$s->execute([$code]);
-$row = $s->fetch();
-$rec = $row ? json_decode($row['rec'], true) : null;
-if (!is_array($rec)) {
-    respond(404, ['success' => false, 'message' => 'Unknown driver code.']);
+$rows = loginCandidates($pdo, $login);
+if (count($rows) > 1) {
+    respond(409, ['success' => false, 'ambiguous' => true, 'message' => 'More than one driver has this login ID.']);
 }
-
-respond(200, [
-    'success' => true,
-    'rec'     => $rec,
-    'ts'      => (int)$row['rec_ts'],
-    'key'     => kioskSyncKey($code),
-]);
+if (!$rows || $rows[0]['rec'] === null) {
+    respond(404, ['success' => false, 'message' => 'Unknown login ID.']);
+}
+sendRecord($rows[0]);

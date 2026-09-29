@@ -113,7 +113,7 @@ function timeAgo(string $datetime): string {
 
 /**
  * Self-upgrading schema for kiosk data, so shared hosting needs no manual SQL:
- * widens participants.access_code for the kiosk unique code (e.g. ARJ9876)
+ * widens participants.access_code for the kiosk login ID (e.g. ARJ987)
  * and creates race_scores (live leaderboard) and kiosk_records (cross-kiosk login,
  * journey stage). Each step is independent and never takes the page down: a host
  * that refuses foreign keys gets the tables without them.

@@ -50,7 +50,7 @@ if (str_starts_with($phone, '91') && strlen($phone) === 12) {
 $pdo = db();
 ensureKioskSchema($pdo);
 
-// The kiosk's unique code (first 3 letters of name + first 4 digits of mobile, e.g. ARJ9876)
+// The kiosk's login ID (first 3 letters of the first name + first 3 digits of the mobile, e.g. ARJ987)
 $want = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $fp26));
 if (strlen($want) < 3 || strlen($want) > 16) $want = '';
 $codeFree = function (string $c, int $exceptId = 0) use ($pdo): bool {
@@ -85,18 +85,17 @@ if ($existing) {
     ]);
 }
 
-// Use the kiosk's code; fall back to a random one only if it is already taken
+// Use the kiosk's login ID. If another driver already holds it, add two characters:
+// the driver still logs in with the login ID and confirms with their mobile number.
 $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 if ($want !== '' && $codeFree($want)) {
     $code = $want;
 } else do {
-    $code = '';
-    for ($i = 0; $i < 6; $i++) {
+    $code = $want !== '' && strlen($want) <= 14 ? $want : '';
+    for ($i = 0, $n = $code === '' ? 6 : 2; $i < $n; $i++) {
         $code .= $chars[random_int(0, strlen($chars) - 1)];
     }
-    $ck = $pdo->prepare('SELECT id FROM participants WHERE access_code = ?');
-    $ck->execute([$code]);
-} while ($ck->fetch());
+} while (!$codeFree($code));
 
 try {
     $ins = $pdo->prepare(
