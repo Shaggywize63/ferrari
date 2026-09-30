@@ -40,7 +40,7 @@ pageHead('Admin Login', true);
 
   <main>
     <section>
-      <div class="eyebrow">Pit Lane Experience · Powered by HP</div>
+      <div class="eyebrow">A Pitlane · Powered by HP</div>
       <h1>Race<br>Control</h1>
       <p class="lead-copy">Registrations, journey progress and race results from every kiosk, live.</p>
     </section>
@@ -64,7 +64,7 @@ pageHead('Admin Login', true);
   </main>
 
   <footer>
-    <span class="eyebrow">Pit Lane Experience · Powered by HP</span>
+    <span class="eyebrow">A Pitlane · Powered by HP</span>
     <a class="eyebrow" style="color:var(--navy)" href="<?= APP_URL ?>/leaderboard.html">Live Leaderboard →</a>
   </footer>
 </div>
