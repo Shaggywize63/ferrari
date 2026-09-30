@@ -13,7 +13,7 @@ function pageHead(string $title, bool $isAdmin = false): void {
 <!-- designed light-only: opt out of browser auto-dark and dark-mode extensions -->
 <meta name="color-scheme" content="only light">
 <meta name="darkreader-lock">
-<title>{$title} – A Pit Lane of Ferrari</title>
+<title>{$title} – Pit Lane Experience</title>
 <link rel="stylesheet" href="https://use.typekit.net/uef7mgf.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -62,10 +62,10 @@ HTML;
     echo <<<HTML
 <nav class="admin-sidebar d-flex flex-column">
   <div class="sidebar-brand">
-    <img src="{$base}/assets/img/scuderia-ferrari-hp.svg" alt="Scuderia Ferrari HP">
+    <img src="{$base}/assets/img/scuderia-ferrari-hp.svg" alt="HP">
     <div>
       <div class="brand-sub">Admin Portal</div>
-      <div class="brand-name">A Pit Lane<br>of Ferrari</div>
+      <div class="brand-name">Pit Lane<br>Experience</div>
     </div>
   </div>
   <ul class="nav flex-column flex-grow-1">

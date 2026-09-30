@@ -189,10 +189,10 @@ function kioskSyncKey(string $code): string {
 
 /** Kiosk stations after registration, in journey order: key => label. */
 const JOURNEY_STATIONS = [
-    'driver' => 'Driver Check',
+    'driver' => 'Avatar',
     'car'    => 'Car Design',
-    'race'   => 'Race',
     'pit'    => 'Pit Stop',
+    'race'   => 'Race',
 ];
 
 /** Which stations a kiosk record shows as finished. */

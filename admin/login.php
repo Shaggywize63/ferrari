@@ -30,7 +30,7 @@ pageHead('Admin Login', true);
 ?>
 <div class="admin-login">
   <header>
-    <img src="<?= APP_URL ?>/assets/img/scuderia-ferrari-hp.svg" alt="Scuderia Ferrari HP">
+    <img src="<?= APP_URL ?>/assets/img/scuderia-ferrari-hp.svg" alt="HP">
     <div class="text-center" style="position:relative;z-index:1">
       <div class="eyebrow red">Admin Portal</div>
       <div style="font-size:1.1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase">Sign In</div>
@@ -40,7 +40,7 @@ pageHead('Admin Login', true);
 
   <main>
     <section>
-      <div class="eyebrow">A Pit Lane of Ferrari · Powered by HP</div>
+      <div class="eyebrow">Pit Lane Experience · Powered by HP</div>
       <h1>Race<br>Control</h1>
       <p class="lead-copy">Registrations, journey progress and race results from every kiosk, live.</p>
     </section>
@@ -64,7 +64,7 @@ pageHead('Admin Login', true);
   </main>
 
   <footer>
-    <span class="eyebrow">A Pit Lane of Ferrari · Powered by HP</span>
+    <span class="eyebrow">Pit Lane Experience · Powered by HP</span>
     <a class="eyebrow" style="color:var(--navy)" href="<?= APP_URL ?>/leaderboard.html">Live Leaderboard →</a>
   </footer>
 </div>

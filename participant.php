@@ -121,7 +121,7 @@ pageHead('My Dashboard');
             border-radius:12px;padding:.6rem 1.5rem;display:inline-block;
           "><?= sanitize($p['access_code']) ?></div>
           <div class="print-name"><?= sanitize($p['name']) ?></div>
-          <div class="print-event">A Pit Lane of Ferrari · Powered by HP</div>
+          <div class="print-event">Pit Lane Experience · Powered by HP</div>
         </div>
         <div class="mt-3" style="font-size:.8rem;color:var(--text-muted)">Show this code at each stage to check in</div>
         <div class="d-flex gap-2 mt-2">
