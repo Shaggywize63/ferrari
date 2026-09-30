@@ -71,7 +71,7 @@ pageHead('Register');
     <div class="reg-card-header">
       <div style="font-size:2.5rem">🏎</div>
       <h1 class="h4 fw-800 mb-1 mt-2" style="color:#fff">Register to Compete</h1>
-      <p class="mb-0" style="color:rgba(255,255,255,.7);font-size:.9rem">Pit Lane Experience · HP Challenge</p>
+      <p class="mb-0" style="color:rgba(255,255,255,.7);font-size:.9rem">A Pitlane · HP Challenge</p>
     </div>
     <div class="reg-card-body">
       <?php foreach ($errors as $e): ?>

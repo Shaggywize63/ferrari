@@ -14,7 +14,7 @@ $rows = array_slice($entries, 3);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Race Leaderboard · Pit Lane Experience</title>
+<title>Race Leaderboard · A Pitlane</title>
 <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/main.css">
 <style>
   html, body { margin:0; height:100%; background:#0B0B0C; overflow:hidden; color:#F4F2EE; }
@@ -92,7 +92,7 @@ $rows = array_slice($entries, 3);
 <header>
   <div class="hdr-brand">
     <div>
-      <div class="hdr-brand-name">Pit Lane Experience</div>
+      <div class="hdr-brand-name">A Pitlane</div>
       <div class="hdr-title">Powered by HP</div>
     </div>
   </div>
