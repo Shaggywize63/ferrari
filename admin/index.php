@@ -128,8 +128,8 @@ pageHead('Dashboard', true);
       </div>
       <div class="card-body">
         <?php
-        $steps = ['registered' => 'Registered', 'driver' => 'Driver Check', 'car' => 'Car Design',
-                  'race' => 'Race', 'pit' => 'Pit Stop', 'complete' => 'Journey Complete'];
+        $steps = ['registered' => 'Registered', 'driver' => 'Avatar', 'car' => 'Car Design',
+                  'pit' => 'Pit Stop', 'race' => 'Race', 'complete' => 'Journey Complete'];
         $base  = max(1, $journey['registered']);
         foreach ($steps as $k => $label):
           $n = $journey[$k]; $pct = (int)round($n / $base * 100);

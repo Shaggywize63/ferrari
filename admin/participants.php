@@ -12,10 +12,10 @@ $stage = (string)($_GET['stage'] ?? '');
 $stageFilters = [
     ''         => 'All stages',
     'none'     => 'Registered only',
-    'driver'   => 'Driver Check done',
+    'driver'   => 'Avatar done',
     'car'      => 'Car Design done',
-    'race'     => 'Race done',
     'pit'      => 'Pit Stop done',
+    'race'     => 'Race done',
     'complete' => 'Journey complete',
 ];
 if (!isset($stageFilters[$stage])) $stage = '';
@@ -50,15 +50,16 @@ if (($_GET['export'] ?? '') === 'csv') {
     header('Content-Disposition: attachment; filename="participants-journey-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
     fputcsv($out, ['Unique ID', 'Name', 'Mobile', 'Email', 'City', 'Registered At',
-                   'Driver Check', 'Driver Type', 'Car Design', 'Race', 'Best Race Score', 'Races',
-                   'Pit Stop', 'Pit Stop Score', 'Stage', 'Last Activity']);
+                   'Avatar', 'Driver Type', 'Car Design', 'Pit Stop', 'Pit Stop Score',
+                   'Race', 'Best Race Score', 'Races', 'Stage', 'Last Activity']);
     foreach ($st as $r) {
         $f = participantFlags($r);
         fputcsv($out, [
             $r['access_code'], $r['name'], $r['phone'], $r['email'], $r['city'] ?? '', $r['registered_at'],
-            $f['driver'] ? 'Yes' : 'No', $r['tag'] ?? '', $f['car'] ? 'Yes' : 'No', $f['race'] ? 'Yes' : 'No',
-            max((int)$r['best'], (int)$r['race_score']) ?: '', (int)$r['races'],
-            $f['pit'] ? 'Yes' : 'No', $r['pit_score'] ?? '', journeyStage($f)['label'],
+            $f['driver'] ? 'Yes' : 'No', $r['tag'] ?? '', $f['car'] ? 'Yes' : 'No',
+            $f['pit'] ? 'Yes' : 'No', $r['pit_score'] ?? '',
+            $f['race'] ? 'Yes' : 'No', max((int)$r['best'], (int)$r['race_score']) ?: '', (int)$r['races'],
+            journeyStage($f)['label'],
             max((string)$r['last_seen'], (string)$r['last_race'], (string)$r['registered_at']),
         ]);
     }
@@ -109,10 +110,10 @@ pageHead('Participants', true);
       <?php
       $cards = [
         ['',         'Registered',   $counts['registered'], 'bi-people-fill',       'red'],
-        ['driver',   'Driver Check', $counts['driver'],     'bi-person-bounding-box','blue'],
+        ['driver',   'Avatar',       $counts['driver'],     'bi-person-bounding-box','blue'],
         ['car',      'Car Design',   $counts['car'],        'bi-palette-fill',      'gold'],
-        ['race',     'Race',         $counts['race'],       'bi-flag-fill',         'blue'],
-        ['pit',      'Pit Stop',     $counts['pit'],        'bi-tools',             'gold'],
+        ['pit',      'Pit Stop',     $counts['pit'],        'bi-tools',             'blue'],
+        ['race',     'Race',         $counts['race'],       'bi-flag-fill',         'gold'],
         ['complete', 'Complete',     $counts['complete'],   'bi-trophy-fill',       'green'],
       ];
       foreach ($cards as [$key, $label, $val, $icon, $color]): ?>
@@ -150,8 +151,8 @@ pageHead('Participants', true);
           <thead>
             <tr>
               <th>Driver</th><th>Contact</th><th>Registered</th>
-              <th class="text-center">Driver Check</th><th class="text-center">Car Design</th>
-              <th class="text-center">Race</th><th class="text-center">Pit Stop</th>
+              <th class="text-center">Avatar</th><th class="text-center">Car Design</th>
+              <th class="text-center">Pit Stop</th><th class="text-center">Race</th>
               <th>Stage</th><th>Last Activity</th>
             </tr>
           </thead>
@@ -178,8 +179,8 @@ pageHead('Participants', true);
               <td style="color:var(--text-muted);font-size:.85rem;white-space:nowrap"><?= date('j M, H:i', strtotime($r['registered_at'])) ?></td>
               <td class="text-center" style="font-size:.8rem"><?= $tick($f['driver'], sanitize((string)($r['tag'] ?? ''))) ?></td>
               <td class="text-center"><?= $tick($f['car']) ?></td>
-              <td class="text-center" style="font-size:.85rem"><?= $tick($f['race'], $best ? number_format($best) : '') ?></td>
               <td class="text-center" style="font-size:.85rem"><?= $tick($f['pit'], $r['pit_score'] !== null ? number_format((int)$r['pit_score']) : '') ?></td>
+              <td class="text-center" style="font-size:.85rem"><?= $tick($f['race'], $best ? number_format($best) : '') ?></td>
               <td><?= stageBadge($f) ?></td>
               <td style="color:var(--text-muted);font-size:.85rem;white-space:nowrap"><?= timeAgo($last) ?></td>
             </tr>

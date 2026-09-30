@@ -21,7 +21,7 @@ function env(string $key, string $default = ''): string {
 define('APP_TIMEZONE', env('APP_TIMEZONE', 'Asia/Kolkata'));
 date_default_timezone_set(APP_TIMEZONE);
 
-define('APP_NAME',    'A Pit Lane of Ferrari');
+define('APP_NAME',    'Pit Lane Experience');
 define('APP_TAGLINE', 'Powered by HP');
 define('APP_URL',     rtrim(env('APP_URL', 'http://localhost'), '/'));
 define('QR_DIR',      __DIR__ . '/../qrcodes');
