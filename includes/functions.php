@@ -145,6 +145,18 @@ function ensureKioskSchema(PDO $pdo): void {
         }
     }, 'access_code');
 
+    // email is contact detail, not identity: two drivers may give the same address
+    $step(function () use ($pdo) {
+        if ($pdo->query("SHOW INDEX FROM participants WHERE Key_name = 'uq_participants_email'")->fetch()) {
+            $pdo->exec('ALTER TABLE participants DROP INDEX uq_participants_email, ADD INDEX idx_participants_email (email)');
+        }
+    }, 'email_not_unique');
+    $step(function () use ($pdo) {
+        if (!$pdo->query("SHOW INDEX FROM participants WHERE Key_name = 'idx_participants_phone'")->fetch()) {
+            $pdo->exec('ALTER TABLE participants ADD INDEX idx_participants_phone (phone)');
+        }
+    }, 'phone_index');
+
     $step(fn() => $create("CREATE TABLE IF NOT EXISTS race_scores (
         id             INT          NOT NULL AUTO_INCREMENT,
         code           VARCHAR(16)  NOT NULL,

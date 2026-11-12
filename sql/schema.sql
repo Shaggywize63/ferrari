@@ -65,11 +65,12 @@ CREATE TABLE IF NOT EXISTS participants (
     city          VARCHAR(100),
     dob           DATE,
     team_name     VARCHAR(100),
-    access_code   CHAR(6)       NOT NULL,
+    access_code   VARCHAR(16)   NOT NULL,
     status        ENUM('active','eliminated','winner') NOT NULL DEFAULT 'active',
     registered_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_participants_email       (email),
+    KEY idx_participants_email             (email),
+    KEY idx_participants_phone             (phone),
     UNIQUE KEY uq_participants_access_code (access_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

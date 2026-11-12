@@ -58,6 +58,7 @@
 
     /* ── Record upload: debounced per driver, retried while offline ── */
     var pending = {};   // code -> newest record not yet on the server
+    var tries = {};     // code -> failed uploads in a row (stop retrying after a while)
     var timer = null;
 
     function upload(rec) {
@@ -86,8 +87,9 @@
         return post('/api/driver.php', body);
       })
         .then(function (resp) {
-          // 4xx won't get better by retrying (unknown code, not this driver's record)
-          if (resp.status >= 500) throw new Error('server ' + resp.status);
+          // 404: the server has no driver with this code yet (registration did not get through):
+          // try again shortly. Other 4xx won't get better by retrying.
+          if (resp.status >= 500 || resp.status === 404) throw new Error('server ' + resp.status);
         });
     }
 
@@ -96,8 +98,11 @@
       Object.keys(pending).forEach(function (code) {
         var rec = pending[code];
         upload(rec).then(function () {
+          delete tries[code];
           if (pending[code] === rec) delete pending[code];
         }).catch(function () {
+          tries[code] = (tries[code] || 0) + 1;
+          if (tries[code] > 40) { delete pending[code]; return; }   // ~10 minutes: give up
           if (!timer) timer = setTimeout(flush, 15000);   // offline: try again shortly
         });
       });

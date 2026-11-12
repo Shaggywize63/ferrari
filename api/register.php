@@ -59,22 +59,24 @@ $codeFree = function (string $c, int $exceptId = 0) use ($pdo): bool {
     return !$q->fetch();
 };
 
-// If already registered (by email or phone) return their existing code
+// The same driver signing up again (same mobile number and same name) gets their existing code.
+// Matching is by mobile + name only: an email or a mobile number can be shared (family members,
+// a made-up email, staff testing with their own details), and matching on those alone would hand
+// one driver another driver's record.
+$normName = fn(string $n): string => strtolower(preg_replace('/\s+/', ' ', trim($n)));
 $existing = null;
-if ($email) {
-    $s = $pdo->prepare('SELECT id, access_code FROM participants WHERE email = ? LIMIT 1');
-    $s->execute([$email]);
-    $existing = $s->fetch();
-}
-if (!$existing && $phone) {
-    $s = $pdo->prepare('SELECT id, access_code FROM participants WHERE phone = ? LIMIT 1');
+if ($phone) {
+    $s = $pdo->prepare('SELECT id, name, access_code FROM participants WHERE phone = ? ORDER BY id DESC LIMIT 20');
     $s->execute([$phone]);
-    $existing = $s->fetch();
+    foreach ($s->fetchAll() as $row) {
+        if ($normName($row['name']) === $normName($name)) { $existing = $row; break; }
+    }
 }
 
 if ($existing) {
     // keep the database code in step with the code the kiosk shows the driver
-    if ($want !== '' && $existing['access_code'] !== $want && $codeFree($want, (int)$existing['id'])) {
+    if ($want !== '' && $existing['access_code'] !== $want && strpos($existing['access_code'], $want) !== 0
+        && $codeFree($want, (int)$existing['id'])) {
         $pdo->prepare('UPDATE participants SET access_code = ? WHERE id = ?')->execute([$want, $existing['id']]);
         $existing['access_code'] = $want;
     }
@@ -120,12 +122,6 @@ try {
         'already_exists' => false,
     ]);
 } catch (PDOException $e) {
-    // Duplicate entry (race condition) — retry lookup
-    if ($email) {
-        $s = $pdo->prepare('SELECT id, access_code FROM participants WHERE email = ? LIMIT 1');
-        $s->execute([$email]);
-        $row = $s->fetch();
-        if ($row) out(true, 'Already registered.', ['access_code' => $row['access_code'], 'participant_id' => $row['id'], 'already_exists' => true]);
-    }
+    error_log('register.php: ' . $e->getMessage());
     out(false, 'Registration failed. Please try again.');
 }
