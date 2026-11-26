@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>HP Matchday · Leaderboard</title>
+<link rel="icon" href="data:,">
+<link rel="preload" href="../assets/fonts/inter-tight.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;src:url(../assets/fonts/inter.woff2) format("woff2")}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:500 800;font-display:swap;src:url(../assets/fonts/inter-tight.woff2) format("woff2")}
+:root{--navy:#0D1B3E;--muted:#5B6B7F;--line:rgba(13,27,62,.12);--hp:#024AD8;--gold:#C9A227;--u:clamp(9px,1vw,19px)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#EEF2F7;color:var(--navy);font-family:Inter,system-ui,sans-serif;font-size:var(--u)}
+.h{font-family:"Inter Tight",Inter,sans-serif;letter-spacing:-.02em}
+header{display:flex;align-items:center;gap:1.6em;padding:1.3em 3em;background:#fff;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+header svg.logo{width:3.4em;height:3.4em;flex:none}
+header .sep{width:1px;height:2.4em;background:var(--line)}
+header h1{margin:0;font-size:2em;font-weight:800;text-transform:uppercase;line-height:1}
+header h1 small{display:block;font:600 .42em Inter,sans-serif;letter-spacing:.24em;color:var(--hp);margin-bottom:.5em}
+header .stripes{position:absolute;right:24em;top:0;height:100%;width:9em}
+header .live{margin-left:auto;display:flex;align-items:center;gap:.7em;font-size:.85em;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+header .live i{width:.8em;height:.8em;border-radius:50%;background:#1F9D55;animation:pulse 1.6s infinite}
+header .live.off i{background:#D9A400;animation:none}
+@keyframes pulse{50%{opacity:.35}}
+main{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:1.6em;padding:1.6em 3em 1em}
+.card{background:#fff;border:1px solid var(--line);box-shadow:0 .4em 1.2em rgba(13,27,62,.06)}
+.card>h2{margin:0;padding:1em 1.4em;font-size:.9em;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--hp);border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.card>h2 span{color:var(--muted)}
+.row{display:grid;grid-template-columns:3.2em 3.6em minmax(0,1fr) 8em 7em;align-items:center;gap:1em;padding:.5em 1.4em;border-bottom:1px solid var(--line);min-height:4.25em}
+.row:last-child{border-bottom:0}
+.row .rk{font:800 2em "Inter Tight",sans-serif;color:#9AA6B6;text-align:center}
+.row.t1 .rk,.row.t2 .rk,.row.t3 .rk{color:var(--gold)}
+.row.t1{background:linear-gradient(90deg,#FBF6E4,#fff 70%)}
+.row .kit svg{width:3.2em;height:auto;display:block}
+.row .nm{min-width:0}
+.row .nm b{display:block;font:700 1.45em "Inter Tight",sans-serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .nm small{font-size:.8em;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.row .mk{text-align:right;font-size:1em;color:var(--muted);white-space:nowrap}
+.row .mk b{font:700 1.5em "Inter Tight",sans-serif;color:var(--navy)}.row .mk i{font-style:normal}
+.row .sc{text-align:right;font:800 2.1em "Inter Tight",sans-serif;color:var(--hp)}
+.row.new{animation:hi 2.4s ease-out}
+@keyframes hi{0%{background:#F6E7A8}100%{background:transparent}}
+.side{display:grid;gap:1.6em;align-content:start}
+.side .row{grid-template-columns:2.2em 2.8em minmax(0,1fr) 3.4em;min-height:3.5em;padding:.4em 1.2em;gap:.8em}
+.side .row .rk{font-size:1.4em}.side .row .kit svg{width:2.6em}.side .row .nm b{font-size:1.15em}.side .row .sc{font-size:1.7em;color:var(--navy)}
+.empty{padding:3em 1.4em;text-align:center;color:var(--muted);font-size:1.15em}
+footer{display:flex;justify-content:space-between;gap:2em;padding:.4em 3em 1.6em;font-size:.85em;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:820px){:root{--u:13px}main{grid-template-columns:1fr;padding:1em}header{padding:1em}header .stripes{display:none}footer{padding:0 1em 1.4em;flex-direction:column;gap:.5em}.row{grid-template-columns:2em 2.8em minmax(0,1fr) auto 4.6em;gap:.6em;padding:.5em .8em}.row .mk i{display:none}.row .sc{font-size:1.7em}.row .nm b{font-size:1.2em}.row .nm small{font-size:.7em;letter-spacing:.1em}}
+</style>
+</head>
+<body>
+<header>
+  <span id="logo"></span><span class="sep"></span>
+  <h1 class="h"><small>HP Matchday · Penalty challenge</small>Leaderboard</h1>
+  <svg class="stripes" viewBox="0 0 150 88" preserveAspectRatio="none"><path d="M32 0h30L30 88H0zM102 0h30l-32 88H70z" fill="#024AD8"/></svg>
+  <span class="live" id="live"><i></i><span id="livet">Live</span></span>
+</header>
+<main>
+  <section class="card"><h2><span style="color:var(--hp)">Top 10 · match score</span><span id="scope"></span></h2><div id="top"><div class="empty">Loading…</div></div></section>
+  <div class="side">
+    <section class="card"><h2>Top scorers <span>goals</span></h2><div id="scorers"></div></section>
+    <section class="card"><h2>Top goalkeepers <span>saves</span></h2><div id="keepers"></div></section>
+  </div>
+</main>
+<footer><span id="counts"></span><span>From pitch to tech · Powered by HP</span></footer>
+<script src="../assets/art.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.Art, esc = A.esc, today = /[?&]today=1/.test(location.search), seen = null;
+  var ROLE = { striker: 'Striker', playmaker: 'Playmaker', defender: 'Defender', goalkeeper: 'Goalkeeper' };
+  document.body.insertAdjacentHTML('afterbegin', A.defs());
+  document.getElementById('logo').innerHTML = A.hph(60).replace('<svg ', '<svg class="logo" ');
+  document.getElementById('scope').textContent = today ? 'Today' : 'All time';
+
+  function kit(p) { return '<span class="kit">' + A.jersey(p.kit, { side: 'back', num: p.num == null ? '' : p.num, w: 60, shadow: false }) + '</span>'; }
+  function key(p) { return p.name + '|' + p.num + '|' + p.score; }
+  function main(list) {
+    if (!list.length) return '<div class="empty">No scores yet. Be the first on the board!</div>';
+    return list.map(function (p, i) {
+      var keep = p.mode === 'keeper', fresh = seen && !seen[key(p)];
+      return '<div class="row t' + (i + 1) + (fresh ? ' new' : '') + '"><span class="rk">' + (i + 1) + '</span>' + kit(p) +
+        '<span class="nm"><b>' + esc(p.name) + '</b><small>' + (ROLE[p.role] || '') + (p.num != null ? ' · No. ' + p.num : '') + '</small></span>' +
+        '<span class="mk"><b>' + p.made + '</b>/' + p.shots + '<i> ' + (keep ? 'saved' : 'scored') + '</i></span><span class="sc">' + p.score + '</span></div>';
+    }).join('');
+  }
+  function side(list, none) {
+    if (!list.length) return '<div class="empty" style="padding:1.6em 1em;font-size:1em">' + none + '</div>';
+    return list.map(function (p, i) {
+      return '<div class="row t' + (i + 1) + '"><span class="rk">' + (i + 1) + '</span>' + kit(p) + '<span class="nm"><b>' + esc(p.name) + '</b></span><span class="sc">' + p.made + '</span></div>';
+    }).join('');
+  }
+  function load() {
+    fetch('../api/leaderboard.php' + (today ? '?today=1' : ''), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d.success) throw 0;
+      document.getElementById('top').innerHTML = main(d.top);
+      document.getElementById('scorers').innerHTML = side(d.scorers, 'No goals yet');
+      document.getElementById('keepers').innerHTML = side(d.keepers, 'No saves yet');
+      document.getElementById('counts').textContent = d.players + (d.players === 1 ? ' player signed up' : ' players signed up') + ' · ' + d.played + ' on the board';
+      document.getElementById('live').classList.remove('off'); document.getElementById('livet').textContent = 'Live';
+      seen = {}; d.top.forEach(function (p) { seen[key(p)] = 1; });
+    }).catch(function () {
+      document.getElementById('live').classList.add('off'); document.getElementById('livet').textContent = 'Reconnecting…';
+    });
+  }
+  load(); setInterval(load, 5000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# HP Matchday · its own site inside this hosting account (separate from the Ferrari kiosk at the main address)
+DirectoryIndex index.html
+
+# Kiosk laptops stay open all day: always check for the newest version of the app files
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|js|css)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
+
+# Shared helper, not an endpoint
+<Files "_md.php">
+    Order allow,deny
+    Deny from all
+</Files>
